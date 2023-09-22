@@ -126,11 +126,9 @@ class ControllerBar(controllers.Controllers, ServiceBar):
 
 
 def main():
-    f = group.Group(__name__, "test_blueprint", "/foobar/api/v1")
-    # b = group.Group(__name__, "test_blueprint", "/foobar/api/v1")
-
-    controller_foo = ControllerFoo(f, path="/foo", endpoint="foo_endpoint")
-    controller_bar = ControllerBar(f, path="/bar", endpoint="bar_endpoint")
+    root = "/foobar/api/v1"
+    controller_foo = ControllerFoo(group.Group(__name__, "test_blueprint", root), path="/foo", endpoint="foo_endpoint")
+    controller_bar = ControllerBar(group.Group(__name__, "test_blueprint", root), path="/bar", endpoint="bar_endpoint")
 
     application_service = ApplicationService()
     application_service.add_controller(controller_foo)

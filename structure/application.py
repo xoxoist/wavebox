@@ -14,7 +14,6 @@ class ApplicationService:
 
     def add_controller(self, controller: controllers.Controllers):
         self.__registered_controllers.append(controller)
-        print(self.__registered_controllers)
 
     def create_app(self):
         app = Flask(__name__)
