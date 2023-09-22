@@ -23,19 +23,18 @@
 #         print(e.errors())
 
 from pydantic import BaseModel
-from flask import Flask, Blueprint, request
+from flask import Flask, Blueprint, request, jsonify
 from structure import group, controllers, services
 
 
 class ResponseBase(BaseModel):
-    response_code: str
-    response_message: str
-    detail: dict
+    response_code: str | None = None
+    response_message: str | None = None
 
 
 class RequestCreateFoo(BaseModel):
-    foo_first_name: str
-    foo_last_name: str
+    foo_first_name: str | None = None
+    foo_last_name: str | None = None
 
 
 class RequestCreateBar(BaseModel):
@@ -44,36 +43,39 @@ class RequestCreateBar(BaseModel):
 
 
 class ServiceFoo(services.Services):
-    def serialize(self):
-        print("Serializing data from request")
+    def _validate(self) -> bool:
+        return True
 
-    def manipulator(self):
-        self.serialize()
-        print("Executing service logics")
+    def _logics(self) -> (BaseModel, int):
+        if self._validate():
+            response_model = ResponseBase()
+            response_model.response_code = "00"
+            response_model.response_message = "validation error"
+            return response_model, 500
 
-    def deserialize(self):
-        self.manipulator()
-        print("Deserialize data from manipulator")
+        response_model = ResponseBase()
+        response_model.response_code = "00"
+        response_model.response_message = "Success"
+        return response_model, 200
+
+    def retrieve(self) -> (BaseModel, int):
+        response_model, response_htt_code = self._logics()
+        return response_model, response_htt_code
 
 
 class ControllerFoo(controllers.Controllers, ServiceFoo):
     def __init__(self, blueprint: Blueprint, path: str):
-        super().__init__(request, blueprint, path)
+        super().__init__(blueprint, path)
         self.blueprint.add_url_rule(path, view_func=self.controller)
 
-    def service(self):
-        self.deserialize()
-
     def controller(self):
-        try:
-            super().header_validation()
-            super().request_validation()
-            super().middleware_before()
-            self.service()
-            super().middleware_before()
-            return 'Route 2'
-        except Exception as e:
-            print(e)
+        super().before(RequestCreateFoo)
+
+        response_model, response_http_code = self.retrieve()
+        super().apply(response_model, response_http_code)
+
+        super().after(ResponseBase)
+        return super().done()
 
 
 # Press the green button in the gutter to run the script.

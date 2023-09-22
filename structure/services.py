@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from pydantic import BaseModel
+
 
 class Services(ABC):
     """
@@ -10,10 +12,10 @@ class Services(ABC):
     """
 
     @abstractmethod
-    def serialize(self): pass
+    def _validate(self) -> bool: raise NotImplemented
 
     @abstractmethod
-    def manipulator(self): pass
+    def _logics(self) -> (BaseModel, int): raise NotImplemented
 
     @abstractmethod
-    def deserialize(self): pass
+    def retrieve(self) -> (BaseModel, int): raise NotImplemented
