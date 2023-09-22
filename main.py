@@ -22,10 +22,20 @@
 #     except ValidationError as e:
 #         print(e.errors())
 
+from flask import (Blueprint, Flask, make_response, request)
 from pydantic import BaseModel
-from flask import Flask, Blueprint, request, jsonify
+from structure.application import ApplicationService
 from structure import group, controllers, services
 
+def to_kebab_case(string: str) -> str:
+    return ''.join(['-' + i.capitalize() if i.isupper() else i for i in string]).lstrip('-')
+
+class HeaderBase(BaseModel):
+    Authorization: str
+    ContentType: str | None
+    
+    class Config:
+        alias_generator = to_kebab_case
 
 class ResponseBase(BaseModel):
     response_code: str | None = None
@@ -76,15 +86,51 @@ class ControllerFoo(controllers.Controllers, ServiceFoo):
         super().after(ResponseBase)
         return super().done()
 
+test_controller = ControllerFoo(group.Group(__name__, "test_blueprint", "/api/v1"), path="/foo")
+application_service = ApplicationService()
+application_service.add_controller(controller=test_controller)
+app = application_service.create_app()
+
+def main():
+    app.run(debug= True, port=5002)
+
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
+
+
     app = Flask(__name__)
-    root = group.Group(__name__, "foo_or_bar_api", "/foobar/api/v1/")
 
-    controller_foo = ControllerFoo(root, path="/foo")
+    root = Blueprint(__name__, "foo_or_bar_api", "/api/v1")
 
-    app.register_blueprint(controller_foo.blueprint)
+    @app.route("/foo")
+    def fooFunc():
+        # header_data = {
+        #     'Authorization': "Bearer tesodfksdp2020202",
+        #     'Content-Type': "application/json"
+        # }
+
+        # headersWithoutAuthorization = {
+        #     'Content-Type': "application/json"
+        # }
+
+        err: str = None
+
+        try:
+            headers = HeaderBase(**request.headers)
+
+            request.headers[headers]
+        except Exception as e:
+            print(e)
+            err = str(e)
+
+        
+
+    app.register_blueprint(root)
     app.run(debug=True, port=5002)
+
+    # main()
+
+    
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
