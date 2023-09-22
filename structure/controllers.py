@@ -12,9 +12,9 @@ class Controllers(ABC):
     validation, middleware, next to service.
     """
 
-    def __init__(self, blueprint: Blueprint, path: str):
+    def __init__(self, blueprint: Blueprint, path: str, endpoint: str):
         self.blueprint = blueprint
-        self.blueprint.add_url_rule(path, view_func=self.controller)
+        self.blueprint.add_url_rule(path, view_func=self.controller, endpoint=endpoint)
         self.res = None
         self.req = request
         self.path = path

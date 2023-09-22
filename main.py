@@ -51,8 +51,8 @@ class RequestCreateFoo(BaseModel):
 
 
 class RequestCreateBar(BaseModel):
-    foo_first_name: str
-    foo_last_name: str
+    foo_first_name: str | None = None
+    foo_last_name: str | None = None
 
 
 class ServiceFoo(services.Services):
@@ -63,7 +63,28 @@ class ServiceFoo(services.Services):
         if self._validate():
             response_model = ResponseBase()
             response_model.response_code = "00"
-            response_model.response_message = "validation error"
+            response_model.response_message = "validation error foo"
+            return response_model, 500
+
+        response_model = ResponseBase()
+        response_model.response_code = "00"
+        response_model.response_message = "Success"
+        return response_model, 200
+
+    def retrieve(self) -> (BaseModel, int):
+        response_model, response_htt_code = self._logics()
+        return response_model, response_htt_code
+
+
+class ServiceBar(services.Services):
+    def _validate(self) -> bool:
+        return True
+
+    def _logics(self) -> (BaseModel, int):
+        if self._validate():
+            response_model = ResponseBase()
+            response_model.response_code = "00"
+            response_model.response_message = "validation error bar"
             return response_model, 500
 
         response_model = ResponseBase()
@@ -77,8 +98,8 @@ class ServiceFoo(services.Services):
 
 
 class ControllerFoo(controllers.Controllers, ServiceFoo):
-    def __init__(self, blueprint: Blueprint, path: str):
-        super().__init__(blueprint, path)
+    def __init__(self, blueprint: Blueprint, path: str, endpoint: str):
+        super().__init__(blueprint, path, endpoint)
 
     def controller(self):
         super().before(RequestCreateFoo)
@@ -90,10 +111,31 @@ class ControllerFoo(controllers.Controllers, ServiceFoo):
         return super().done()
 
 
+class ControllerBar(controllers.Controllers, ServiceBar):
+    def __init__(self, blueprint: Blueprint, path: str, endpoint: str):
+        super().__init__(blueprint, path, endpoint)
+
+    def controller(self):
+        super().before(RequestCreateBar)
+
+        response_model, response_http_code = self.retrieve()
+        super().apply(response_model, response_http_code)
+
+        super().after(ResponseBase)
+        return super().done()
+
+
 def main():
-    test_controller = ControllerFoo(group.Group(__name__, "test_blueprint", "/api/v1"), path="/foo")
+    f = group.Group(__name__, "test_blueprint", "/foobar/api/v1")
+    # b = group.Group(__name__, "test_blueprint", "/foobar/api/v1")
+
+    controller_foo = ControllerFoo(f, path="/foo", endpoint="foo_endpoint")
+    controller_bar = ControllerBar(f, path="/bar", endpoint="bar_endpoint")
+
     application_service = ApplicationService()
-    application_service.add_controller(controller=test_controller)
+    application_service.add_controller(controller_foo)
+    application_service.add_controller(controller_bar)
+
     app = application_service.create_app()
     app.run(debug=True, port=5002)
 
