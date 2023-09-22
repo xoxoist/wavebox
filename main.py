@@ -22,8 +22,9 @@
 #     except ValidationError as e:
 #         print(e.errors())
 
+from flask import (Blueprint, request)
 from pydantic import BaseModel
-from flask import Flask, Blueprint, request
+from structure.application import ApplicationService
 from structure import group, controllers, services
 
 
@@ -70,20 +71,32 @@ class ControllerFoo(controllers.Controllers, ServiceFoo):
             super().request_validation()
             super().middleware_before()
             self.service()
-            super().middleware_before()
+            super().middleware_after()
             return 'Route 2'
         except Exception as e:
             print(e)
 
+test_controller = ControllerFoo(group.Group(__name__, "test_blueprint", "/api/v1"), path="/foo")
+application_service = ApplicationService()
+application_service.add_controller(controller=test_controller)
+app = application_service.create_app()
+
+def main():
+    app.run(debug= True, port=5002)
+
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    app = Flask(__name__)
-    root = group.Group(__name__, "foo_or_bar_api", "/foobar/api/v1/")
 
-    controller_foo = ControllerFoo(root, path="/foo")
 
-    app.register_blueprint(controller_foo.blueprint)
-    app.run(debug=True, port=5002)
+    # app = Flask(__name__)
+    # root = group.Group(__name__, "foo_or_bar_api", "/foobar/api/v1/")
+
+    # controller_foo = ControllerFoo(root, path="/foo")
+
+    # app.register_blueprint(controller_foo.blueprint)
+    # app.run(debug=True, port=5002)
+
+    main()
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
