@@ -14,6 +14,7 @@ class Controllers(ABC):
 
     def __init__(self, blueprint: Blueprint, path: str):
         self.blueprint = blueprint
+        self.blueprint.add_url_rule(path, view_func=self.controller)
         self.res = None
         self.req = request
         self.path = path
@@ -21,42 +22,42 @@ class Controllers(ABC):
         self.__response_http_code = 0
         self.__response_json = None
 
-    def header_validation(self):
+    def __header_validation(self):
         print(dict(self.req.headers))
 
-    def request_validation(self):
+    def __request_validation(self):
         print(dict(self.req.get_json()))
 
-    def middleware_before(self):
+    def __middleware_before(self):
         print("Middleware before", self.req.headers.get("Request-Id"))
 
-    def middleware_after(self):
+    def __middleware_after(self):
         print("Middleware after", self.req.headers.get("Request-Id"))
 
-    def bind_request_to_dataclass(self, request_type: Type[BaseModel]) -> BaseModel:
+    def __bind_request_to_dataclass(self, request_type: Type[BaseModel]) -> BaseModel:
         return request_type(**self.req.get_json())
 
-    def make_response(self):
+    def __make_response(self):
         self.res = make_response(self.__response_model.model_dump_json(), self.__response_http_code)
         self.res.headers['Content-Type'] = 'application/json'
 
-    def bind_response_to_dataclass(self, response_type: Type[BaseModel]):
+    def __bind_response_to_dataclass(self, response_type: Type[BaseModel]):
         self.__response_json = response_type(**self.res.get_json())
 
     def before(self, request_type: Type[BaseModel]):
-        self.bind_request_to_dataclass(request_type)
-        self.header_validation()
-        self.request_validation()
-        self.middleware_before()
+        self.__bind_request_to_dataclass(request_type)
+        self.__header_validation()
+        self.__request_validation()
+        self.__middleware_before()
 
     def apply(self, response_model: BaseModel, response_http_code: int):
         self.__response_model = response_model
         self.__response_http_code = response_http_code
 
     def after(self, response_type: Type[BaseModel]):
-        self.middleware_after()
-        self.make_response()
-        self.bind_response_to_dataclass(response_type)
+        self.__middleware_after()
+        self.__make_response()
+        self.__bind_response_to_dataclass(response_type)
 
     def done(self):
         return jsonify(dict(self.__response_json))

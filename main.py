@@ -66,7 +66,6 @@ class ServiceFoo(services.Services):
 class ControllerFoo(controllers.Controllers, ServiceFoo):
     def __init__(self, blueprint: Blueprint, path: str):
         super().__init__(blueprint, path)
-        self.blueprint.add_url_rule(path, view_func=self.controller)
 
     def controller(self):
         super().before(RequestCreateFoo)
