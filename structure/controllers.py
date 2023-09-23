@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from flask import Blueprint, request, make_response, jsonify, Request, Response
 from pydantic import BaseModel
 from typing import Type, Any
+from structure.middleware import Middleware
 
 
 class Controllers(ABC):
@@ -12,12 +13,13 @@ class Controllers(ABC):
     validation, middleware, next to service.
     """
 
-    def __init__(self, blueprint: Blueprint, path: str, endpoint: str):
+    def __init__(self, blueprint: Blueprint, path: str, endpoint: str, middleware: Middleware | None):
         self.blueprint = blueprint
         self.blueprint.add_url_rule(path, view_func=self.controller, endpoint=endpoint)
         self.res: Response
         self.req: Request = request
         self.path: str = path
+        self.middleware: Middleware = middleware
         self.__response_json: Any = None
         self.__response_model: BaseModel | None = None
         self.__response_http_code = 0
@@ -29,10 +31,17 @@ class Controllers(ABC):
         print(dict(self.req.get_json()))
 
     def __middleware_before(self):
-        print("Middleware before", self.req.headers.get("Request-Id"))
+        if self.middleware is not None:
+            self.middleware.before()
+        else:
+            pass
 
     def __middleware_after(self):
-        print("Middleware after", self.req.headers.get("Request-Id"))
+        if self.middleware is not None:
+            self.middleware.after()
+        else:
+            pass
+        # print("Middleware after", self.req.headers.get("Request-Id"))
 
     def __bind_request_to_dataclass(self, request_type: Type[BaseModel]) -> BaseModel:
         return request_type(**self.req.get_json())
@@ -48,7 +57,7 @@ class Controllers(ABC):
         self.req.test = "MEMEG"
 
     def before(self, request_type: Type[BaseModel]):
-        print(getattr(self.req, "test"))
+        # print(getattr(self.req, "test"))
         self.__bind_request_to_dataclass(request_type)
         self.__header_validation()
         self.__request_validation()

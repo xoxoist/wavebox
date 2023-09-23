@@ -22,10 +22,11 @@
 #     except ValidationError as e:
 #         print(e.errors())
 
-from flask import (Blueprint, Flask, make_response, request)
+from flask import (Blueprint, Flask, Request, make_response, request)
 from pydantic import BaseModel
 from structure.application import ApplicationService
 from structure import group, controllers, services, routes
+from structure.middleware import Middleware
 
 
 def to_kebab_case(string: str) -> str:
@@ -96,10 +97,20 @@ class ServiceBar(services.Services):
         response_model, response_htt_code = self._logics()
         return response_model, response_htt_code
 
+class FooMiddleware(Middleware):
+    def __init__(self, req: Request):
+        super().__init__(req)
+    
+    def before(self):
+        print("Middleware before", self.req.headers.get("Postman-Token"))
+    
+    def after(self):
+        print("Middleware after", self.req.headers.get("Postman-Token"))
 
 class ControllerFoo(controllers.Controllers, ServiceFoo):
-    def __init__(self, blueprint: Blueprint, path: str, endpoint: str):
-        super().__init__(blueprint, path, endpoint)
+    def __init__(self, blueprint: Blueprint, path: str, endpoint: str, middleware: Middleware=None):
+        print("Middleware:\n" + str(middleware))
+        super().__init__(blueprint, path, endpoint, middleware)
 
     def controller(self):
         super().before(RequestCreateFoo)
@@ -112,8 +123,8 @@ class ControllerFoo(controllers.Controllers, ServiceFoo):
 
 
 class ControllerBar(controllers.Controllers, ServiceBar):
-    def __init__(self, blueprint: Blueprint, path: str, endpoint: str):
-        super().__init__(blueprint, path, endpoint)
+    def __init__(self, blueprint: Blueprint, path: str, endpoint: str, middleware: Middleware=None):
+        super().__init__(blueprint, path, endpoint, middleware)
 
     def controller(self):
         super().prepare_context()
@@ -131,17 +142,17 @@ class RoutesFooBar(routes.Routes):
         super().__init__()
         self.application_service = application_service
 
-    def register_route(self):
+    def create_routes(self):
         root = "/foobar/api/v1"
         self.application_service.add_controller(
             ControllerFoo(group.Group(__name__, "test_blueprint", root),
-                          path="/foo", endpoint="foo_endpoint"))
+                          path="/foo", endpoint="foo_endpoint", middleware=FooMiddleware(request)))
         self.application_service.add_controller(
             ControllerBar(group.Group(__name__, "test_blueprint", root),
                           path="/bar", endpoint="bar_endpoint"))
 
     def apply(self) -> ApplicationService:
-        self.register_route()
+        self.create_routes()
         return self.application_service
 
 
