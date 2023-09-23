@@ -1,7 +1,7 @@
 from structure.controllers import Controllers
 
 
-class RoutesExtension:
+class Routes:
 
     def __init__(self, routes: []):
         self.routes = routes
