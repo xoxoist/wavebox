@@ -1,7 +1,7 @@
 from flask import Flask
 
 from . import controllers
-from routes import routes
+from structure import routes_manager
 
 
 class ApplicationService:
@@ -18,6 +18,6 @@ class ApplicationService:
     def create_app(self):
         app = Flask(__name__)
         app.config["ERROR_404_HELP"] = False
-        route_extension = routes.Routes(routes=self.__registered_controllers)
+        route_extension = routes_manager.RoutesManager(routes=self.__registered_controllers)
         route_extension.register_route(app)
         return app

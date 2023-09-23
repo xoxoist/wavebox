@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from flask import Request
 
 
-class Middleware(ABC):
+class Middlewares(ABC):
 
     def __init__(self, req: Request):
         self.req = req

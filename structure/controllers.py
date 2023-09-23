@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from flask import Blueprint, request, make_response, jsonify, Request, Response
 from pydantic import BaseModel
 from typing import Type, Any
-from structure.middleware import Middleware
+from structure.middlewares import Middlewares
 
 
 class Controllers(ABC):
@@ -13,13 +13,13 @@ class Controllers(ABC):
     validation, middleware, next to service.
     """
 
-    def __init__(self, blueprint: Blueprint, path: str, endpoint: str, middleware: Middleware | None):
+    def __init__(self, blueprint: Blueprint, path: str, endpoint: str, middleware: Middlewares | None):
         self.blueprint = blueprint
         self.blueprint.add_url_rule(path, view_func=self.controller, endpoint=endpoint)
         self.res: Response
         self.req: Request = request
         self.path: str = path
-        self.middleware: Middleware = middleware
+        self.middleware: Middlewares = middleware
         self.__response_json: Any = None
         self.__response_model: BaseModel | None = None
         self.__response_http_code = 0

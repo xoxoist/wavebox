@@ -2,7 +2,7 @@ from flask import Blueprint
 import random
 
 
-class Group(Blueprint):
+class Groups(Blueprint):
     def __init__(self, import_name: str, group_name: str, url_prefix: str):
         all_numbers = list(range(100, 1000))
         random.shuffle(all_numbers)
