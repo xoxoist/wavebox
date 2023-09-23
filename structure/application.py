@@ -1,7 +1,7 @@
 from flask import Flask
 
 from .extensions.routes_extension import RoutesExtension
-from . import group, controllers
+from . import groups, controllers
 
 
 class ApplicationService:

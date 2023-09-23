@@ -1,12 +1,9 @@
 from flask import Blueprint, jsonify, Flask
 from pydantic import BaseModel, ValidationError
 from structure.application import ApplicationService
-from structure import group, controllers, services, routes
+from structure import groups, controllers, services, routes
 from structure.tools.request_header import HeaderBase
-from troubles.exceptions import ServicesLevelValidateException, ServicesLevelLogicsException, \
-    ServicesLevelRetrieveException, ServicesException
-from troubles.exceptions import ControllersException, FundamentalException
-from troubles.exceptions import MiddlewaresLevelAfterException, MiddlewaresLevelBeforeException
+from troubles.exceptions import FundamentalException
 
 
 class ResponseBase(BaseModel):
@@ -15,13 +12,13 @@ class ResponseBase(BaseModel):
 
 
 class RequestCreateFoo(BaseModel):
-    foo_first_name: str | None = None
-    foo_last_name: str | None = None
+    foo_first_name: str
+    foo_last_name: str
 
 
 class RequestCreateBar(BaseModel):
-    foo_first_name: str | None = None
-    foo_last_name: str | None = None
+    bar_first_name: str
+    bar_last_name: str
 
 
 class ServiceFoo(services.Services):
@@ -35,6 +32,7 @@ class ServiceFoo(services.Services):
         response_model.response_code = "00"
         response_model.response_message = "Success"
         # raise ServicesLevelLogicsException("logics", 403)
+        print("foo service executed")
         return response_model, 200
 
     def retrieve(self) -> (BaseModel, int):
@@ -54,6 +52,7 @@ class ServiceBar(services.Services):
         response_model.response_code = "00"
         response_model.response_message = "Success"
         # raise ServicesLevelLogicsException("logics", 403)
+        print("bar service executed")
         return response_model, 200
 
     def retrieve(self) -> (BaseModel, int):
@@ -86,7 +85,7 @@ class ControllerBar(controllers.Controllers, ServiceBar):
 
     def controller(self):
         try:
-            super().before(RequestCreateFoo, HeaderBase)
+            super().before(RequestCreateBar, HeaderBase)
             super().apply(*self.retrieve())
             super().after(ResponseBase)
             return super().done()
@@ -105,7 +104,7 @@ class RoutesBar(routes.Routes):
     def register_route(self):
         root = "/foobar/api/v1"
         self.application_service.add_controller(
-            ControllerBar(group.Group(__name__, "test_blueprint", root),
+            ControllerBar(groups.Group(__name__, "test_blueprint", root),
                           path="/bar", endpoint="bar_endpoint"))
 
     def apply(self) -> ApplicationService:
@@ -120,7 +119,7 @@ class RoutesFoo(routes.Routes):
     def register_route(self):
         root = "/foobar/api/v1"
         self.application_service.add_controller(
-            ControllerFoo(group.Group(__name__, "test_blueprint", root),
+            ControllerFoo(groups.Group(__name__, "test_blueprint", root),
                           path="/foo", endpoint="foo_endpoint"))
 
     def apply(self) -> ApplicationService:

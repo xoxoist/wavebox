@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from flask import Blueprint, request, make_response, jsonify, Request, Response
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from typing import Type, Any
 from troubles.exceptions import ControllerLevelAfterException, ControllerLevelBeforeException, ControllersException
 
@@ -25,12 +25,14 @@ class Controllers(ABC):
         self.__response_type: Type[BaseModel]
 
     def __header_validation(self, header_type: Type[BaseModel]):
-        header_values = dict(self.req.headers)
-        print(header_values["Request-Id"])
-        return header_type(**header_values)
-
-    def __request_validation(self):
-        print(dict(self.req.get_json()))
+        try:
+            header_values = dict(self.req.headers)
+            return header_type(**header_values)
+        except ValidationError as e:
+            error_messages = []
+            for error in e.errors():
+                error_messages.append(f"Header {error['loc'][0]}: {error['msg']}")
+            raise ControllerLevelBeforeException(str(",".join(error_messages)))
 
     def __middleware_before(self):
         print("Middleware before", self.req.headers.get("Request-Id"))
@@ -39,7 +41,10 @@ class Controllers(ABC):
         print("Middleware after", self.req.headers.get("Request-Id"))
 
     def __bind_request_to_dataclass(self, request_type: Type[BaseModel]) -> BaseModel:
-        return request_type(**self.req.get_json())
+        try:
+            return request_type(**self.req.get_json())
+        except ValidationError as e:
+            raise ControllerLevelBeforeException(str(e))
 
     def __make_response(self):
         self.res = make_response(self.__response_model.model_dump_json(), self.__response_http_code)
@@ -53,7 +58,6 @@ class Controllers(ABC):
         try:
             self.__bind_request_to_dataclass(request_type)
             self.__header_validation(header_type)
-            self.__request_validation()
             self.__middleware_before()
         except ControllersException as e:
             raise ControllerLevelBeforeException(str(e))

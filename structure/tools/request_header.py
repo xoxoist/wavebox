@@ -10,8 +10,8 @@ def _to_snake_case(header: dict) -> dict:
 
 
 class HeaderBase(BaseModel):
-    ContentType: str = None
-    RequestId: str = None
+    ContentType: str
+    RequestId: str
 
     class Config:
         alias_generator = _to_kebab_case
