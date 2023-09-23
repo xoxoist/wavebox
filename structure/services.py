@@ -12,7 +12,7 @@ class Services(ABC):
     """
 
     @abstractmethod
-    def _validate(self) -> bool: raise NotImplemented
+    def _validate(self): raise NotImplemented
 
     @abstractmethod
     def _logics(self) -> (BaseModel, int): raise NotImplemented

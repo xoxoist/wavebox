@@ -2,33 +2,7 @@ from abc import ABC, abstractmethod
 from flask import Blueprint, request, make_response, jsonify, Request, Response
 from pydantic import BaseModel
 from typing import Type, Any
-import http.client as http_c
-
-
-class MiddlewaresException(Exception):
-    pass
-
-
-class ServicesException(Exception):
-    pass
-
-
-class ControllersException(Exception):
-    def __init__(self, parent_exception: Exception, error_code=None):
-        self.error_code = http_c.INTERNAL_SERVER_ERROR
-        for s in parent_exception.args:
-            print(s)
-        # if isinstance(parent_exception.__class__., KeyError):
-        #     self.error_code = http_c.BAD_REQUEST
-        #
-        # if isinstance(parent_exception.__class__, MiddlewaresException):
-        #     self.error_code = http_c.BAD_REQUEST
-        #
-        # if isinstance(parent_exception.__class__, KeyError):
-        #     self.error_code = http_c.BAD_REQUEST
-        #
-        # if isinstance(parent_exception.__class__, KeyError):
-        #     self.error_code = http_c.BAD_REQUEST
+from troubles.exceptions import ControllerLevelAfterException, ControllerLevelBeforeException, ControllersException
 
 
 class Controllers(ABC):
@@ -81,8 +55,8 @@ class Controllers(ABC):
             self.__header_validation(header_type)
             self.__request_validation()
             self.__middleware_before()
-        except Exception as e:
-            raise ControllersException(e)
+        except ControllersException as e:
+            raise ControllerLevelBeforeException(str(e))
 
     def apply(self, response_model: BaseModel, response_http_code: int):
         self.__response_model = response_model
@@ -93,13 +67,14 @@ class Controllers(ABC):
             self.__middleware_after()
             self.__make_response()
             self.__bind_response_to_dataclass(response_type)
-        except Exception as e:
-            raise ControllersException(e)
+        except ControllersException as e:
+            raise ControllerLevelAfterException(str(e))
 
     def done(self):
         return jsonify(dict(self.__response_json))
 
-    def catcher(self, e: KeyError):
+    def catcher(self, response_model: BaseModel):
+        self.__response_json = dict(response_model)
         return jsonify(dict(self.__response_json))
 
     @abstractmethod

@@ -1,8 +1,12 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, Flask
 from pydantic import BaseModel, ValidationError
 from structure.application import ApplicationService
 from structure import group, controllers, services, routes
 from structure.tools.request_header import HeaderBase
+from troubles.exceptions import ServicesLevelValidateException, ServicesLevelLogicsException, \
+    ServicesLevelRetrieveException, ServicesException
+from troubles.exceptions import ControllersException, FundamentalException
+from troubles.exceptions import MiddlewaresLevelAfterException, MiddlewaresLevelBeforeException
 
 
 class ResponseBase(BaseModel):
@@ -21,44 +25,40 @@ class RequestCreateBar(BaseModel):
 
 
 class ServiceFoo(services.Services):
-    def _validate(self) -> bool:
-        return True
+    def _validate(self):
+        pass
+        # raise ServicesLevelValidateException("validate", 403)
 
     def _logics(self) -> (BaseModel, int):
-        if self._validate():
-            response_model = ResponseBase()
-            response_model.response_code = "00"
-            response_model.response_message = "validation error foo"
-            return response_model, 500
-
+        self._validate()
         response_model = ResponseBase()
         response_model.response_code = "00"
         response_model.response_message = "Success"
+        # raise ServicesLevelLogicsException("logics", 403)
         return response_model, 200
 
     def retrieve(self) -> (BaseModel, int):
         response_model, response_htt_code = self._logics()
+        # raise ServicesLevelRetrieveException("retrieve", 404)
         return response_model, response_htt_code
 
 
 class ServiceBar(services.Services):
-    def _validate(self) -> bool:
-        return True
+    def _validate(self):
+        pass
+        # raise ServicesLevelValidateException("validate", 403)
 
     def _logics(self) -> (BaseModel, int):
-        if self._validate():
-            response_model = ResponseBase()
-            response_model.response_code = "00"
-            response_model.response_message = "validation error bar"
-            return response_model, 500
-
+        self._validate()
         response_model = ResponseBase()
         response_model.response_code = "00"
         response_model.response_message = "Success"
+        # raise ServicesLevelLogicsException("logics", 403)
         return response_model, 200
 
     def retrieve(self) -> (BaseModel, int):
         response_model, response_htt_code = self._logics()
+        # raise ServicesLevelRetrieveException("retrieve", 404)
         return response_model, response_htt_code
 
 
@@ -72,10 +72,12 @@ class ControllerFoo(controllers.Controllers, ServiceFoo):
             super().apply(*self.retrieve())
             super().after(ResponseBase)
             return super().done()
-        except controllers.ControllersException as e:
-            # Handle specific custom exceptions
-            error_message = str(e)
-            return jsonify({"error": error_message}), 400  # Return a 400 Bad Request response
+        except FundamentalException as e:
+            err_response = ResponseBase()
+            err_response.response_code = "99"
+            err_response.response_message = str(e)
+            print(e.exception_tag)
+            return super().catcher(err_response)
 
 
 class ControllerBar(controllers.Controllers, ServiceBar):
@@ -83,22 +85,25 @@ class ControllerBar(controllers.Controllers, ServiceBar):
         super().__init__(blueprint, path, endpoint)
 
     def controller(self):
-        super().before(RequestCreateBar, HeaderBase)
-        super().apply(*self.retrieve())
-        super().after(ResponseBase)
-        return super().done()
+        try:
+            super().before(RequestCreateFoo, HeaderBase)
+            super().apply(*self.retrieve())
+            super().after(ResponseBase)
+            return super().done()
+        except FundamentalException as e:
+            err_response = ResponseBase()
+            err_response.response_code = "99"
+            err_response.response_message = str(e)
+            print(e.exception_tag)
+            return super().catcher(err_response)
 
 
-class RoutesFooBar(routes.Routes):
+class RoutesBar(routes.Routes):
     def __init__(self, application_service: ApplicationService):
-        super().__init__()
         self.application_service = application_service
 
     def register_route(self):
         root = "/foobar/api/v1"
-        self.application_service.add_controller(
-            ControllerFoo(group.Group(__name__, "test_blueprint", root),
-                          path="/foo", endpoint="foo_endpoint"))
         self.application_service.add_controller(
             ControllerBar(group.Group(__name__, "test_blueprint", root),
                           path="/bar", endpoint="bar_endpoint"))
@@ -108,13 +113,25 @@ class RoutesFooBar(routes.Routes):
         return self.application_service
 
 
-def main():
-    # d = {"Content-Type": "blabla"}
-    # hb = HeaderBase(**d)
-    # print(hb)
+class RoutesFoo(routes.Routes):
+    def __init__(self, application_service: ApplicationService):
+        self.application_service = application_service
 
+    def register_route(self):
+        root = "/foobar/api/v1"
+        self.application_service.add_controller(
+            ControllerFoo(group.Group(__name__, "test_blueprint", root),
+                          path="/foo", endpoint="foo_endpoint"))
+
+    def apply(self) -> ApplicationService:
+        self.register_route()
+        return self.application_service
+
+
+def main():
     application_service = ApplicationService()
-    application_service = RoutesFooBar(application_service).apply()
+    application_service = RoutesFoo(application_service).apply()
+    application_service = RoutesBar(application_service).apply()
     app = application_service.create_app()
     app.run(debug=True, port=5002)
 
