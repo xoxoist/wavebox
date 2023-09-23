@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from flask import Blueprint, request, make_response, jsonify
+from flask import Blueprint, request, make_response, jsonify, Request, Response
 from pydantic import BaseModel
-from typing import Type
+from typing import Type, Any
 
 
 class Controllers(ABC):
@@ -15,12 +15,12 @@ class Controllers(ABC):
     def __init__(self, blueprint: Blueprint, path: str, endpoint: str):
         self.blueprint = blueprint
         self.blueprint.add_url_rule(path, view_func=self.controller, endpoint=endpoint)
-        self.res = None
-        self.req = request
-        self.path = path
+        self.res: Response
+        self.req: Request = request
+        self.path: str = path
+        self.__response_json: Any = None
         self.__response_model: BaseModel | None = None
         self.__response_http_code = 0
-        self.__response_json = None
 
     def __header_validation(self):
         print(dict(self.req.headers))
@@ -44,7 +44,11 @@ class Controllers(ABC):
     def __bind_response_to_dataclass(self, response_type: Type[BaseModel]):
         self.__response_json = response_type(**self.res.get_json())
 
+    def prepare_context(self):
+        self.req.test = "MEMEG"
+
     def before(self, request_type: Type[BaseModel]):
+        print(getattr(self.req, "test"))
         self.__bind_request_to_dataclass(request_type)
         self.__header_validation()
         self.__request_validation()
@@ -63,5 +67,4 @@ class Controllers(ABC):
         return jsonify(dict(self.__response_json))
 
     @abstractmethod
-    def controller(self):
-        raise NotImplemented
+    def controller(self): raise NotImplemented

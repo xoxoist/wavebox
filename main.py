@@ -25,7 +25,7 @@
 from flask import (Blueprint, Flask, make_response, request)
 from pydantic import BaseModel
 from structure.application import ApplicationService
-from structure import group, controllers, services
+from structure import group, controllers, services, routes
 
 
 def to_kebab_case(string: str) -> str:
@@ -116,6 +116,7 @@ class ControllerBar(controllers.Controllers, ServiceBar):
         super().__init__(blueprint, path, endpoint)
 
     def controller(self):
+        super().prepare_context()
         super().before(RequestCreateBar)
 
         response_model, response_http_code = self.retrieve()
@@ -125,15 +126,28 @@ class ControllerBar(controllers.Controllers, ServiceBar):
         return super().done()
 
 
+class RoutesFooBar(routes.Routes):
+    def __init__(self, application_service: ApplicationService):
+        super().__init__()
+        self.application_service = application_service
+
+    def register_route(self):
+        root = "/foobar/api/v1"
+        self.application_service.add_controller(
+            ControllerFoo(group.Group(__name__, "test_blueprint", root),
+                          path="/foo", endpoint="foo_endpoint"))
+        self.application_service.add_controller(
+            ControllerBar(group.Group(__name__, "test_blueprint", root),
+                          path="/bar", endpoint="bar_endpoint"))
+
+    def apply(self) -> ApplicationService:
+        self.register_route()
+        return self.application_service
+
+
 def main():
-    root = "/foobar/api/v1"
-    controller_foo = ControllerFoo(group.Group(__name__, "test_blueprint", root), path="/foo", endpoint="foo_endpoint")
-    controller_bar = ControllerBar(group.Group(__name__, "test_blueprint", root), path="/bar", endpoint="bar_endpoint")
-
     application_service = ApplicationService()
-    application_service.add_controller(controller_foo)
-    application_service.add_controller(controller_bar)
-
+    application_service = RoutesFooBar(application_service).apply()
     app = application_service.create_app()
     app.run(debug=True, port=5002)
 
