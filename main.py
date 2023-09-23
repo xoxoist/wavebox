@@ -1,43 +1,8 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-# class Registrar:
-#     _app: Flask = Flask(__name__)
-#     _debug: bool = True
-#     _port: int = 5029
-#
-#     def listen(self):
-#         self._app.run(debug=self._debug, port=self._port)
-
-# external_data = {
-#         'first_name': 'Isa',
-#         'last_name': 'Wij',
-#     }
-#
-#     try:
-#         r = RequestCreateFoo(**external_data)
-#         print(r.model_dump_json())
-#     except ValidationError as e:
-#         print(e.errors())
-
-from flask import (Blueprint, Flask, make_response, request)
-from pydantic import BaseModel
+from flask import Blueprint, jsonify
+from pydantic import BaseModel, ValidationError
 from structure.application import ApplicationService
 from structure import group, controllers, services, routes
-
-
-def to_kebab_case(string: str) -> str:
-    return ''.join(['-' + i.capitalize() if i.isupper() else i for i in string]).lstrip('-')
-
-
-class HeaderBase(BaseModel):
-    Authorization: str
-    ContentType: str | None
-
-    class Config:
-        alias_generator = to_kebab_case
+from structure.tools.request_header import HeaderBase
 
 
 class ResponseBase(BaseModel):
@@ -102,13 +67,15 @@ class ControllerFoo(controllers.Controllers, ServiceFoo):
         super().__init__(blueprint, path, endpoint)
 
     def controller(self):
-        super().before(RequestCreateFoo)
-
-        response_model, response_http_code = self.retrieve()
-        super().apply(response_model, response_http_code)
-
-        super().after(ResponseBase)
-        return super().done()
+        try:
+            super().before(RequestCreateFoo, HeaderBase)
+            super().apply(*self.retrieve())
+            super().after(ResponseBase)
+            return super().done()
+        except controllers.ControllersException as e:
+            # Handle specific custom exceptions
+            error_message = str(e)
+            return jsonify({"error": error_message}), 400  # Return a 400 Bad Request response
 
 
 class ControllerBar(controllers.Controllers, ServiceBar):
@@ -116,12 +83,8 @@ class ControllerBar(controllers.Controllers, ServiceBar):
         super().__init__(blueprint, path, endpoint)
 
     def controller(self):
-        super().prepare_context()
-        super().before(RequestCreateBar)
-
-        response_model, response_http_code = self.retrieve()
-        super().apply(response_model, response_http_code)
-
+        super().before(RequestCreateBar, HeaderBase)
+        super().apply(*self.retrieve())
         super().after(ResponseBase)
         return super().done()
 
@@ -146,6 +109,10 @@ class RoutesFooBar(routes.Routes):
 
 
 def main():
+    # d = {"Content-Type": "blabla"}
+    # hb = HeaderBase(**d)
+    # print(hb)
+
     application_service = ApplicationService()
     application_service = RoutesFooBar(application_service).apply()
     app = application_service.create_app()
