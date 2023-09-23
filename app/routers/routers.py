@@ -10,9 +10,11 @@ class Routers(routes.Routes):
     def __init__(self, application_service: ApplicationService):
         super().__init__()
         self.application_service = application_service
-
+    
     def create_routes(self):
         root = "/foobar/api/v1"
+
+        
         self.application_service.add_controller(
             ControllerFoo(groups.Groups(__name__, "test_blueprint", root),
                           path="/foo", endpoint="foo_endpoint", middleware=FooMiddleware(request)))

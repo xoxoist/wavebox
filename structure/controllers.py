@@ -23,6 +23,8 @@ class Controllers(ABC):
         self.__response_json: Any = None
         self.__response_model: BaseModel | None = None
         self.__response_http_code = 0
+        if self.middleware is not None:
+            self.middleware._set_blueprint(self.blueprint)
 
     def __header_validation(self):
         print(dict(self.req.headers))
