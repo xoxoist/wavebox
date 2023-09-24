@@ -9,4 +9,8 @@ class RoutesManager:
     def register_route(self, app):
         for route in self.routes:
             if isinstance(route, Controllers):
+                route
                 app.register_blueprint(route.blueprint)
+
+    def get_all_routes(self):
+        return self.routes
