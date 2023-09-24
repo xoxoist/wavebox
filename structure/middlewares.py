@@ -1,11 +1,14 @@
 from abc import ABC, abstractmethod
-from flask import Blueprint, Response
+from flask import Blueprint, Response, Request
 
 
 class Middlewares(ABC):
-    def set_blueprint(self, blueprint: Blueprint):
-        blueprint.before_request(self.before)
-        blueprint.after_request(self.after)
+    def __init__(self, req: Request | None):
+        self.request = req
+
+    # def set_blueprint(self, blueprint: Blueprint):
+    #     blueprint.before_request(self.before)
+    #     blueprint.after_request(self.after)
 
     @abstractmethod
     def before(self): raise NotImplemented

@@ -65,6 +65,7 @@ class ServiceBar(services.Services):
 
 class FooBarMiddleware(middlewares.Middlewares):
     def __init__(self, req: Request | None):
+        super(FooBarMiddleware, self).__init__(req)
         self.request = req
 
     def before(self):
@@ -75,8 +76,8 @@ class FooBarMiddleware(middlewares.Middlewares):
         print("MIDDLEWARE AFTER", response)
         # response.headers['Content-Type'] = 'application/json'
         # response.headers['Memeg'] = 'Memeg'
-        # return response
-        raise troubles.exceptions.MiddlewaresLevelAfterException("komtol")
+        return response
+        # raise troubles.exceptions.MiddlewaresLevelAfterException("komtol")
 
 
 class ControllerFoo(controllers.Controllers, ServiceFoo):

@@ -27,7 +27,7 @@ class Controllers(ABC):
         self.__response_type: Type[BaseModel]
         if self.middleware is not None:
             self.middleware.request = self.req
-            self.middleware.set_blueprint(self.blueprint)
+            # self.middleware.set_blueprint(self.blueprint)
 
     def __header_validation(self, header_type: Type[BaseModel]):
         try:
