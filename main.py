@@ -32,9 +32,9 @@ class ServiceFoo(services.Services):
         response_model = ResponseBase()
         response_model.response_code = "00"
         response_model.response_message = "Success"
-        raise ServicesLevelLogicsException("logics", 500)
-        # print("foo service executed")
-        # return response_model, 200
+        # raise ServicesLevelLogicsException("logics", 500)
+        print("foo service executed")
+        return response_model, 200
 
     def retrieve(self) -> (BaseModel, int):
         response_model, response_htt_code = self._logics()
@@ -62,18 +62,36 @@ class ServiceBar(services.Services):
         return response_model, response_htt_code
 
 
-class FooBarMiddleware(middlewares.Middlewares):
+class FooMiddleware(middlewares.Middlewares):
     def __init__(self, req: Request | None):
-        super(FooBarMiddleware, self).__init__(req)
+        super(FooMiddleware, self).__init__(req)
         self.request = req
 
     def before(self):
-        print("MIDDLEWARE BEFORE1", self.request.headers)
+        print("FOO MIDDLEWARE BEFORE", self.request.headers)
         # raise MiddlewaresLevelBeforeException("memeg", 503)
         # abort(401)
 
     def after(self, response: Response) -> Response:
-        print("MIDDLEWARE AFTER1", response)
+        print("FOO MIDDLEWARE AFTER", response)
+        # response.headers['Content-Type'] = 'application/json'
+        # response.headers['Memeg'] = 'Memeg'
+        # abort(401)
+        return response
+
+
+class BarMiddleware(middlewares.Middlewares):
+    def __init__(self, req: Request | None):
+        super(BarMiddleware, self).__init__(req)
+        self.request = req
+
+    def before(self):
+        print("BAR MIDDLEWARE BEFORE", self.request.headers)
+        # raise MiddlewaresLevelBeforeException("memeg", 503)
+        # abort(401)
+
+    def after(self, response: Response) -> Response:
+        print("BAR MIDDLEWARE AFTER", response)
         # response.headers['Content-Type'] = 'application/json'
         # response.headers['Memeg'] = 'Memeg'
         # abort(401)
@@ -82,7 +100,7 @@ class FooBarMiddleware(middlewares.Middlewares):
 
 class ControllerFoo(controllers.Controllers, ServiceFoo):
     def __init__(self, blueprint: Blueprint, path: str, endpoint: str):
-        super().__init__(blueprint, path, endpoint, FooBarMiddleware)
+        super().__init__(blueprint, path, endpoint, FooMiddleware)
 
     def controller(self):
         try:
@@ -100,7 +118,7 @@ class ControllerFoo(controllers.Controllers, ServiceFoo):
 
 class ControllerBar(controllers.Controllers, ServiceBar):
     def __init__(self, blueprint: Blueprint, path: str, endpoint: str):
-        super().__init__(blueprint, path, endpoint, FooBarMiddleware)
+        super().__init__(blueprint, path, endpoint, BarMiddleware)
 
     def controller(self):
         try:
