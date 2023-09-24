@@ -3,12 +3,8 @@ from flask import Blueprint, Request, Response
 
 
 class Middlewares(ABC):
-    request: Request | None
-    response: Response | None
-
-    def __init__(self):
-        self.request: Request | None
-        self.response: Response | None
+    def __init__(self, req: Request | None):
+        self.request: Request = req
 
     def set_blueprint(self, blueprint: Blueprint):
         blueprint.before_request(self.before)
@@ -18,4 +14,4 @@ class Middlewares(ABC):
     def before(self): raise NotImplemented
 
     @abstractmethod
-    def after(self): raise NotImplemented
+    def after(self, response: Response): raise NotImplemented

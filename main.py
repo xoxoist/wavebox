@@ -1,4 +1,4 @@
-from flask import Blueprint
+from flask import Blueprint, Response, Request
 from pydantic import BaseModel
 from structure.application import ApplicationService
 from structure import groups, controllers, services, routes, middlewares
@@ -61,21 +61,24 @@ class ServiceBar(services.Services):
         return response_model, response_htt_code
 
 
-class FooMiddleware(middlewares.Middlewares):
-    def __init__(self):
-        super().__init__()
+class FooBarMiddleware(middlewares.Middlewares):
+    def __init__(self, req: Request | None):
+        super().__init__(req)
+        self.request = req
 
     def before(self):
-        print("Middleware before", self.request.headers.get("Postman-Token"))
+        print("MIDDLEWARE BEFORE", self.request)
 
-    def after(self):
-        self.response.headers['Content-Type'] = 'application/json'
-        self.response.headers['Memeg'] = 'Memeg'
+    def after(self, response: Response):
+        print("MIDDLEWARE AFTER", response)
+        response.headers['Content-Type'] = 'application/json'
+        response.headers['Memeg'] = 'Memeg'
+        return response
 
 
 class ControllerFoo(controllers.Controllers, ServiceFoo):
     def __init__(self, blueprint: Blueprint, path: str, endpoint: str):
-        super().__init__(blueprint, path, endpoint, None)
+        super().__init__(blueprint, path, endpoint, FooBarMiddleware)
 
     def controller(self):
         try:
@@ -93,7 +96,7 @@ class ControllerFoo(controllers.Controllers, ServiceFoo):
 
 class ControllerBar(controllers.Controllers, ServiceBar):
     def __init__(self, blueprint: Blueprint, path: str, endpoint: str):
-        super().__init__(blueprint, path, endpoint, None)
+        super().__init__(blueprint, path, endpoint, FooBarMiddleware)
 
     def controller(self):
         try:
