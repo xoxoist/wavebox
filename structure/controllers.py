@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
-from flask import Blueprint, request, make_response, jsonify, Request, Response
+from flask import Blueprint, Request, Response, request, make_response, jsonify
 from pydantic import BaseModel, ValidationError
 from typing import Type, Any
 from troubles.exceptions import ControllerLevelAfterException, ControllerLevelBeforeException, ControllersException
+from structure.middlewares import Middlewares
 
 
 class Controllers(ABC):
@@ -13,16 +14,20 @@ class Controllers(ABC):
     validation, middleware, next to service.
     """
 
-    def __init__(self, blueprint: Blueprint, path: str, endpoint: str):
+    def __init__(self, blueprint: Blueprint, path: str, endpoint: str, middleware: Middlewares | None):
         self.blueprint: Blueprint = blueprint
         self.blueprint.add_url_rule(path, view_func=self.controller, endpoint=endpoint)
         self.res: Response
         self.req: Request = request
         self.path: str = path
+        self.middleware: Middlewares = middleware
         self.__response_json: Any = None
         self.__response_model: BaseModel | None = None
         self.__response_http_code = 0
         self.__response_type: Type[BaseModel]
+        if self.middleware is not None:
+            self.middleware.request = self.req
+            self.middleware.set_blueprint(self.blueprint)
 
     def __header_validation(self, header_type: Type[BaseModel]):
         try:
@@ -34,25 +39,37 @@ class Controllers(ABC):
                 error_messages.append(f"Header {error['loc'][0]}: {error['msg']}")
             raise ControllerLevelBeforeException(str(",".join(error_messages)))
 
-    def __middleware_before(self):
-        print("Middleware before", self.req.headers.get("Request-Id"))
-
-    def __middleware_after(self):
-        print("Middleware after", self.req.headers.get("Request-Id"))
-
     def __bind_request_to_dataclass(self, request_type: Type[BaseModel]) -> BaseModel:
         try:
             return request_type(**self.req.get_json())
         except ValidationError as e:
-            raise ControllerLevelBeforeException(str(e))
+            error_messages = []
+            for error in e.errors():
+                error_messages.append(f"Response body {error['loc'][0]}: {error['msg']}")
+            raise ControllerLevelBeforeException(str(",".join(error_messages)))
+
+    def __bind_response_to_dataclass(self, response_type: Type[BaseModel]):
+        try:
+            self.__response_type = response_type
+            self.__response_json = self.__response_type(**self.res.get_json())
+        except ValidationError as e:
+            error_messages = []
+            for error in e.errors():
+                error_messages.append(f"Response body {error['loc'][0]}: {error['msg']}")
+            raise ControllerLevelAfterException(str(",".join(error_messages)))
 
     def __make_response(self):
         self.res = make_response(self.__response_model.model_dump_json(), self.__response_http_code)
-        self.res.headers['Content-Type'] = 'application/json'
+        # self.middleware.response = self.res
+        # self.res.headers['Content-Type'] = 'application/json'
 
-    def __bind_response_to_dataclass(self, response_type: Type[BaseModel]):
-        self.__response_type = response_type
-        self.__response_json = response_type(**self.res.get_json())
+    def __middleware_before(self):
+        if self.middleware is not None:
+            self.middleware.before()
+
+    def __middleware_after(self):
+        if self.middleware is not None:
+            self.middleware.after()
 
     def before(self, request_type: Type[BaseModel], header_type: Type[BaseModel]):
         try:
@@ -68,8 +85,8 @@ class Controllers(ABC):
 
     def after(self, response_type: Type[BaseModel]):
         try:
-            self.__middleware_after()
             self.__make_response()
+            self.__middleware_after()
             self.__bind_response_to_dataclass(response_type)
         except ControllersException as e:
             raise ControllerLevelAfterException(str(e))
