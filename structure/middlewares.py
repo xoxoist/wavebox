@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
-from flask import Blueprint, Response, Request
+from flask import Blueprint, Response, Request, jsonify
+
+import troubles.exceptions
 
 
 class Middlewares(ABC):
@@ -7,6 +9,7 @@ class Middlewares(ABC):
         self.request = req
 
     def set_blueprint(self, blueprint: Blueprint):
+        blueprint.errorhandler(troubles.exceptions.FundamentalException)
         blueprint.before_request(self.before)
         blueprint.after_request(self.after)
 

@@ -116,6 +116,8 @@
 
 
 from enum import Enum
+import werkzeug.exceptions
+from flask import jsonify
 
 
 class Tagging(Enum):
@@ -145,67 +147,75 @@ class ExceptionMiddlewareTag(Tagging):
     AFTER = 2
 
 
-class FundamentalException(Exception):
+class FundamentalException(werkzeug.exceptions.HTTPException):
     def __init__(self, message: str, exception_tag: ExceptionLayerTag):
         super().__init__(message)
         self.exception_tag = exception_tag
+        self.code = 500
 
 
 class ControllersException(FundamentalException):
     def __init__(self, message: str, error_code=500):
         super().__init__(message, ExceptionLayerTag.CONTROLLER)
-        self.error_code = error_code
+        self.code = error_code
 
 
 class ControllerLevelBeforeException(ControllersException):
     def __init__(self, message: str, error_code=500):
         super().__init__(message, error_code)
         self.exception_tag = ExceptionControllerTag.BEFORE
+        self.code = error_code
 
 
 class ControllerLevelAfterException(ControllersException):
     def __init__(self, message: str, error_code=500):
         super().__init__(message, error_code)
         self.exception_tag = ExceptionControllerTag.AFTER
+        self.code = error_code
 
 
 class ServicesException(FundamentalException):
     def __init__(self, message: str, error_code=500):
         super().__init__(message, ExceptionLayerTag.SERVICE)
-        self.error_code = error_code
+        self.code = error_code
 
 
 class ServicesLevelValidateException(ServicesException):
     def __init__(self, message: str, error_code=500):
         super().__init__(message, error_code)
         self.exception_tag = ExceptionServiceTag.VALIDATE
+        self.code = error_code
 
 
 class ServicesLevelLogicsException(ServicesException):
     def __init__(self, message: str, error_code=500):
         super().__init__(message, error_code)
         self.exception_tag = ExceptionServiceTag.LOGICS
+        self.code = error_code
 
 
 class ServicesLevelRetrieveException(ServicesException):
     def __init__(self, message: str, error_code=500):
         super().__init__(message, error_code)
         self.exception_tag = ExceptionServiceTag.RETRIEVE
+        self.code = error_code
 
 
 class MiddlewaresException(FundamentalException):
     def __init__(self, message: str, error_code=500):
         super().__init__(message, ExceptionLayerTag.MIDDLEWARE)
-        self.error_code = error_code
+        self.code = error_code
 
 
 class MiddlewaresLevelBeforeException(MiddlewaresException):
     def __init__(self, message: str, error_code=500):
         super().__init__(message, error_code)
         self.exception_tag = ExceptionMiddlewareTag.BEFORE
+        self.code = error_code
 
 
 class MiddlewaresLevelAfterException(MiddlewaresException):
     def __init__(self, message: str, error_code=500):
         super().__init__(message, error_code)
         self.exception_tag = ExceptionMiddlewareTag.AFTER
+        self.code = error_code

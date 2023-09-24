@@ -1,4 +1,4 @@
-from flask import Blueprint, Response, Request, abort
+from flask import Blueprint, Response, Request, abort, jsonify
 from pydantic import BaseModel
 from werkzeug.exceptions import HTTPException
 
@@ -71,15 +71,15 @@ class FooBarMiddleware(middlewares.Middlewares):
 
     def before(self):
         print("MIDDLEWARE BEFORE", self.request.headers)
-        # raise troubles.exceptions.MiddlewaresLevelBeforeException("test")
+        raise troubles.exceptions.MiddlewaresLevelBeforeException("memeg")
+        # abort(401)
 
     def after(self, response: Response) -> Response:
         print("MIDDLEWARE AFTER", response)
         # response.headers['Content-Type'] = 'application/json'
         # response.headers['Memeg'] = 'Memeg'
-        abort(401)
+        # abort(401)
         return response
-        # raise troubles.exceptions.MiddlewaresLevelAfterException("komtol")
 
 
 class ControllerFoo(controllers.Controllers, ServiceFoo):
@@ -154,6 +154,7 @@ def main():
     application_service = RoutesFoo(application_service).apply()
     application_service = RoutesBar(application_service).apply()
     app = application_service.create_app()
+
     app.run(debug=True, port=5002)
 
 

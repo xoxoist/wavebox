@@ -1,4 +1,7 @@
-from flask import Flask
+import werkzeug.exceptions
+from flask import Flask, jsonify
+
+import troubles.exceptions
 from structure import controllers
 from structure import routes_manager
 
@@ -25,7 +28,15 @@ class ApplicationService:
 
     def create_app(self):
         app = Flask(__name__)
+
+        @app.errorhandler(werkzeug.exceptions.HTTPException)
+        def handle_http_exception(e):
+            response = jsonify({'error': str(e)})
+            response.status_code = e.code
+            return response
+
         app.config["ERROR_404_HELP"] = False
+
         route_extension = routes_manager.RoutesManager(routes=self.__registered_controllers)
         route_extension.register_route(app)
 
