@@ -1,5 +1,7 @@
 from flask import Blueprint, Response, Request
 from pydantic import BaseModel
+
+import troubles.exceptions
 from structure.application import ApplicationService
 from structure import groups, controllers, services, routes, middlewares
 from structure.tools.request_header import HeaderBase
@@ -63,17 +65,18 @@ class ServiceBar(services.Services):
 
 class FooBarMiddleware(middlewares.Middlewares):
     def __init__(self, req: Request | None):
-        super().__init__(req)
         self.request = req
 
     def before(self):
-        print("MIDDLEWARE BEFORE", self.request)
+        print("MIDDLEWARE BEFORE", self.request.headers)
+        # raise troubles.exceptions.MiddlewaresLevelBeforeException("test")
 
     def after(self, response: Response):
         print("MIDDLEWARE AFTER", response)
-        response.headers['Content-Type'] = 'application/json'
-        response.headers['Memeg'] = 'Memeg'
-        return response
+        # response.headers['Content-Type'] = 'application/json'
+        # response.headers['Memeg'] = 'Memeg'
+        # return response
+        raise troubles.exceptions.MiddlewaresLevelAfterException("komtol")
 
 
 class ControllerFoo(controllers.Controllers, ServiceFoo):

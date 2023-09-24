@@ -1,11 +1,8 @@
 from abc import ABC, abstractmethod
-from flask import Blueprint, Request, Response
+from flask import Blueprint, Response
 
 
 class Middlewares(ABC):
-    def __init__(self, req: Request | None):
-        self.request: Request = req
-
     def set_blueprint(self, blueprint: Blueprint):
         blueprint.before_request(self.before)
         blueprint.after_request(self.after)
