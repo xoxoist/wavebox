@@ -1,12 +1,10 @@
 from flask import Blueprint, Response, Request, abort, jsonify
 from pydantic import BaseModel
 from werkzeug.exceptions import HTTPException
-
-import troubles.exceptions
 from structure.application import ApplicationService
 from structure import groups, controllers, services, routes, middlewares
 from structure.tools.request_header import HeaderBase
-from troubles.exceptions import FundamentalException
+from troubles.exceptions import FundamentalException, ServicesLevelLogicsException, MiddlewaresLevelBeforeException
 
 
 class ResponseBase(BaseModel):
@@ -35,7 +33,7 @@ class ServiceFoo(services.Services):
         response_model.response_code = "00"
         response_model.response_message = "Success"
         # raise ServicesLevelLogicsException("logics", 403)
-        print("foo service executed")
+        # print("foo service executed")
         return response_model, 200
 
     def retrieve(self) -> (BaseModel, int):
@@ -71,7 +69,7 @@ class FooBarMiddleware(middlewares.Middlewares):
 
     def before(self):
         print("MIDDLEWARE BEFORE", self.request.headers)
-        raise troubles.exceptions.MiddlewaresLevelBeforeException("memeg")
+        raise MiddlewaresLevelBeforeException("memeg")
         # abort(401)
 
     def after(self, response: Response) -> Response:
@@ -92,7 +90,7 @@ class ControllerFoo(controllers.Controllers, ServiceFoo):
             super().apply(*self.retrieve())
             super().after(ResponseBase)
             return super().done()
-        except FundamentalException | HTTPException as e:
+        except FundamentalException as e:
             err_response = ResponseBase()
             err_response.response_code = "99"
             err_response.response_message = str(e)
@@ -153,7 +151,19 @@ def main():
     application_service = ApplicationService()
     application_service = RoutesFoo(application_service).apply()
     application_service = RoutesBar(application_service).apply()
+
     app = application_service.create_app()
+
+    attributes = vars(ResponseBase)
+    for attribute, value in attributes.items():
+        print(f"{attribute}: {value}")
+    print(dict(ResponseBase.__annotations__)["response_code"])
+
+    @app.errorhandler(HTTPException)
+    def handle_http_exception(e):
+        response = jsonify({'error': str(e)})
+        response.status_code = e.code
+        return response
 
     app.run(debug=True, port=5002)
 
