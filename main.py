@@ -32,7 +32,7 @@ class ServiceFoo(services.Services):
         response_model = ResponseBase()
         response_model.response_code = "00"
         response_model.response_message = "Success"
-        # raise ServicesLevelLogicsException("logics", 403)
+        # raise ServicesLevelLogicsException("logics", 500)
         # print("foo service executed")
         return response_model, 200
 
@@ -68,12 +68,12 @@ class FooBarMiddleware(middlewares.Middlewares):
         self.request = req
 
     def before(self):
-        print("MIDDLEWARE BEFORE", self.request.headers)
-        raise MiddlewaresLevelBeforeException("memeg")
+        print("MIDDLEWARE BEFORE1", self.request.headers)
+        # raise MiddlewaresLevelBeforeException("memeg", 503)
         # abort(401)
 
     def after(self, response: Response) -> Response:
-        print("MIDDLEWARE AFTER", response)
+        print("MIDDLEWARE AFTER1", response)
         # response.headers['Content-Type'] = 'application/json'
         # response.headers['Memeg'] = 'Memeg'
         # abort(401)
@@ -95,7 +95,7 @@ class ControllerFoo(controllers.Controllers, ServiceFoo):
             err_response.response_code = "99"
             err_response.response_message = str(e)
             print(e.exception_tag)
-            return super().catcher(err_response)
+            return super().catcher(err_response, e)
 
 
 class ControllerBar(controllers.Controllers, ServiceBar):
@@ -113,7 +113,7 @@ class ControllerBar(controllers.Controllers, ServiceBar):
             err_response.response_code = "99"
             err_response.response_message = str(e)
             print(e.exception_tag)
-            return super().catcher(err_response)
+            return super().catcher(err_response, e)
 
 
 class RoutesBar(routes.Routes):
@@ -154,16 +154,19 @@ def main():
 
     app = application_service.create_app()
 
-    attributes = vars(ResponseBase)
-    for attribute, value in attributes.items():
-        print(f"{attribute}: {value}")
-    print(dict(ResponseBase.__annotations__)["response_code"])
+    # attributes = vars(ResponseBase)
+    # for attribute, value in attributes.items():
+    #     print(f"{attribute}: {value}")
+    # print(dict(ResponseBase.__annotations__)["response_code"])
 
     @app.errorhandler(HTTPException)
     def handle_http_exception(e):
-        response = jsonify({'error': str(e)})
-        response.status_code = e.code
-        return response
+        response = ResponseBase()
+        response.response_code = "99"
+        response.response_message = str(e)
+        response_data = jsonify(dict(response))
+        response_data.status_code = e.code
+        return response_data
 
     app.run(debug=True, port=5002)
 

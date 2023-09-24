@@ -2,7 +2,8 @@ from abc import ABC, abstractmethod
 from flask import Blueprint, Request, Response, request, make_response, jsonify
 from pydantic import BaseModel, ValidationError
 from typing import Type, Any
-from troubles.exceptions import ControllerLevelAfterException, ControllerLevelBeforeException, ControllersException
+from troubles.exceptions import ControllerLevelAfterException, ControllerLevelBeforeException, ControllersException, \
+    FundamentalException
 from structure.middlewares import Middlewares
 
 
@@ -85,9 +86,11 @@ class Controllers(ABC):
     def done(self):
         return jsonify(dict(self.__response_json))
 
-    def catcher(self, response_model: BaseModel):
+    def catcher(self, response_model: BaseModel, e: FundamentalException):
         self.__response_json = dict(response_model)
-        return jsonify(dict(self.__response_json))
+        response_data = jsonify(dict(self.__response_json))
+        response_data.status_code = e.code
+        return response_data
 
     @abstractmethod
     def controller(self):
