@@ -1,5 +1,6 @@
-from flask import Blueprint, Response, Request
+from flask import Blueprint, Response, Request, abort
 from pydantic import BaseModel
+from werkzeug.exceptions import HTTPException
 
 import troubles.exceptions
 from structure.application import ApplicationService
@@ -72,10 +73,11 @@ class FooBarMiddleware(middlewares.Middlewares):
         print("MIDDLEWARE BEFORE", self.request.headers)
         # raise troubles.exceptions.MiddlewaresLevelBeforeException("test")
 
-    def after(self, response: Response):
+    def after(self, response: Response) -> Response:
         print("MIDDLEWARE AFTER", response)
         # response.headers['Content-Type'] = 'application/json'
         # response.headers['Memeg'] = 'Memeg'
+        abort(401)
         return response
         # raise troubles.exceptions.MiddlewaresLevelAfterException("komtol")
 
@@ -90,7 +92,7 @@ class ControllerFoo(controllers.Controllers, ServiceFoo):
             super().apply(*self.retrieve())
             super().after(ResponseBase)
             return super().done()
-        except FundamentalException as e:
+        except FundamentalException | HTTPException as e:
             err_response = ResponseBase()
             err_response.response_code = "99"
             err_response.response_message = str(e)

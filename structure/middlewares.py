@@ -6,12 +6,12 @@ class Middlewares(ABC):
     def __init__(self, req: Request | None):
         self.request = req
 
-    # def set_blueprint(self, blueprint: Blueprint):
-    #     blueprint.before_request(self.before)
-    #     blueprint.after_request(self.after)
+    def set_blueprint(self, blueprint: Blueprint):
+        blueprint.before_request(self.before)
+        blueprint.after_request(self.after)
 
     @abstractmethod
     def before(self): raise NotImplemented
 
     @abstractmethod
-    def after(self, response: Response): raise NotImplemented
+    def after(self, response: Response) -> Response: raise NotImplemented
