@@ -1,6 +1,9 @@
 from flask import Flask
-from structure.controllers import Controllers
+from flask import jsonify
+from werkzeug.exceptions import HTTPException
+from components.controllers import Controllers
 from structure import routes_manager
+from app.responses import ResponseBase
 
 
 class ApplicationService:
@@ -41,6 +44,17 @@ class ApplicationService:
         route_extension.register_route(app)
 
         if app.config['DEBUG'] == 1:
-            print('List of registered routes:\n', self.log_endpoint(app))
+            for t in self.log_endpoint(app):
+                print(t)
+                pass
+
+        @app.errorhandler(HTTPException)
+        def handle_http_exception(e):
+            response = ResponseBase()
+            response.response_code = "99"
+            response.response_message = str(e)
+            response_data = jsonify(dict(response))
+            response_data.status_code = e.code
+            return response_data
 
         app.run(port=5000)
