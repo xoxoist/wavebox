@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from structure.application import ApplicationService
 
 from structure.application import ApplicationService
 

@@ -10,4 +10,3 @@ class Groups(Blueprint):
         super().__init__(name="{}_{}".format(group_name, unique_numbers),
                          import_name=import_name,
                          url_prefix=url_prefix)
-

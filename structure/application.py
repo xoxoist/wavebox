@@ -1,7 +1,5 @@
 from flask import Flask
-from flask_script import Manager
-
-from . import controllers
+from structure.controllers import Controllers
 from structure import routes_manager
 
 
@@ -16,9 +14,8 @@ class ApplicationService:
         'port': 5000,
         'debug': 0,
     }
-    
 
-    def add_controller(self, controller: controllers.Controllers):
+    def add_controller(self, controller: Controllers):
         self.__registered_controllers.append(controller)
 
     def set_config(self, debug=0, port=5000):
@@ -30,10 +27,10 @@ class ApplicationService:
     def log_endpoint(self, app):
         output = []
         for rule in app.url_map.iter_rules():
-            if 'GET' in rule.methods and not any(rule.rule.startswith(ignore) for ignore in ['/static', '/favicon.ico']):
-                 output.append(f"{rule.rule} | {rule.methods}: {rule.endpoint}")
+            if 'GET' in rule.methods and not any(
+                    rule.rule.startswith(ignore) for ignore in ['/static', '/favicon.ico']):
+                output.append(f"{rule.rule} | {rule.methods}: {rule.endpoint}")
         return output
-
 
     def create_app(self):
         app = Flask(__name__)
@@ -45,14 +42,5 @@ class ApplicationService:
 
         if app.config['DEBUG'] == 1:
             print('List of registered routes:\n', self.log_endpoint(app))
-        
+
         app.run(port=5000)
-        
-        
-
-        
-
-        
-    
-    
-
