@@ -1,9 +1,14 @@
 from abc import ABC, abstractmethod
-from flask import Blueprint, Request, Response, request, make_response, jsonify
+from flask import Blueprint, Request, Response
+from flask import request, make_response, jsonify
 from pydantic import BaseModel, ValidationError
 from typing import Type, Any
-from troubles.exceptions import ControllerLevelAfterException, ControllerLevelBeforeException, ControllersException, \
-    FundamentalException
+
+# structural imports
+from troubles.exceptions import ControllerLevelAfterException
+from troubles.exceptions import ControllerLevelBeforeException
+from troubles.exceptions import ControllersException
+from troubles.exceptions import FundamentalException
 from components.middlewares import Middlewares
 
 
@@ -31,6 +36,10 @@ class Controllers(ABC):
             self.middleware.set_blueprint(self.blueprint)
 
     def __header_validation(self, header_type: Type[BaseModel]):
+        """
+        '__header_validation' validating incoming header from request and validate
+        the content with pydantic BaseModel class.
+        """
         try:
             header_values = dict(self.req.headers)
             return header_type(**header_values)
@@ -41,6 +50,10 @@ class Controllers(ABC):
             raise ControllerLevelBeforeException(str(",".join(error_messages)))
 
     def __bind_request_to_dataclass(self, request_type: Type[BaseModel]) -> BaseModel:
+        """
+        '__bind_request_to_dataclass' validating incoming request and validate
+        the content with pydantic BaseModel class.
+        """
         try:
             return request_type(**self.req.get_json())
         except ValidationError as e:
@@ -50,6 +63,10 @@ class Controllers(ABC):
             raise ControllerLevelBeforeException(str(",".join(error_messages)))
 
     def __bind_response_to_dataclass(self, response_type: Type[BaseModel]):
+        """
+        '__bind_response_to_dataclass' validating out coming response and validate
+        the content with pydantic BaseModel class.
+        """
         try:
             self.__response_type = response_type
             self.__response_json = response_type(**self.res.get_json())
@@ -60,12 +77,22 @@ class Controllers(ABC):
             raise ControllerLevelAfterException(str(",".join(error_messages)))
 
     def __make_response(self):
+        """
+        '__make_response' making response to be passed through middleware and controller
+        and construct retrieve json response from response model and http code too,
+        attaching response for middleware, TODO need to be able adding default response headers
+        """
         self.res = make_response(self.__response_model.model_dump_json(), self.__response_http_code)
         if self.middleware is not None:
             self.middleware.response = self.res
         self.res.headers['Content-Type'] = 'application/json'
 
     def before(self, request_type: Type[BaseModel], header_type: Type[BaseModel]):
+        """
+        'before' executing binding body and header from incoming request then catch
+        the error of validation and will be raised ControllerLevelBeforeException,
+        to tells the controller that its happen in before function execution.
+        """
         try:
             self.__bind_request_to_dataclass(request_type)
             self.__header_validation(header_type)
@@ -77,6 +104,11 @@ class Controllers(ABC):
         self.__response_http_code = response_http_code
 
     def after(self, response_type: Type[BaseModel]):
+        """
+        'after' executing making response and binding response body then will catch
+        the error from making response and binding response body ControllerLevelAfterException,
+        to tells the controller that its happen in after function execution.
+        """
         try:
             self.__make_response()
             self.__bind_response_to_dataclass(response_type)
@@ -84,9 +116,17 @@ class Controllers(ABC):
             raise ControllerLevelAfterException(str(e))
 
     def done(self):
+        """
+        'done' returning json data when before apply and after already executed without throwing
+        any exception, and it will construct jsonify to returning response to the controller.
+        """
         return jsonify(dict(self.__response_json))
 
     def catcher(self, response_model: BaseModel, e: FundamentalException):
+        """
+        'catcher' returning jsonify when before apply and after encounter an exception from any other
+        source like controller, middleware or business logic.
+        """
         self.__response_json = dict(response_model)
         response_data = jsonify(dict(self.__response_json))
         response_data.status_code = e.code
@@ -94,4 +134,9 @@ class Controllers(ABC):
 
     @abstractmethod
     def controller(self):
+        """
+        'controller' this represents your controller logic, but you need to call before apply and after to,
+        make your process runs smoothly and returns with done when there is no raised exception caught, and
+        use catcher to handle raised exception inside the except block.
+        """
         raise NotImplemented
