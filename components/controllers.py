@@ -4,7 +4,7 @@ from pydantic import BaseModel, ValidationError
 from typing import Type, Any
 from troubles.exceptions import ControllerLevelAfterException, ControllerLevelBeforeException, ControllersException, \
     FundamentalException
-from structure.middlewares import Middlewares
+from components.middlewares import Middlewares
 
 
 class Controllers(ABC):

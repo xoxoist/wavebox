@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from app.responses import ResponseBase
-from structure import services
+from components import services
 
 
 class ServiceFoo(services.Services):

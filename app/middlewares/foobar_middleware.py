@@ -1,5 +1,5 @@
 from flask import Request, Response
-from structure.middlewares import Middlewares
+from components.middlewares import Middlewares
 from troubles.exceptions import MiddlewaresLevelBeforeException
 
 

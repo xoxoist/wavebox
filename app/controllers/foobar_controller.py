@@ -2,7 +2,7 @@ from flask import Blueprint
 from app.requests import RequestCreateBar, RequestCreateFoo
 from app.responses import ResponseBase
 from app.services.foobar_service import ServiceBar, ServiceFoo
-from structure import controllers
+from components import controllers
 from structure.tools.request_header import HeaderBase
 from app.middlewares.foobar_middleware import FooMiddleware, BarMiddleware
 from troubles.exceptions import FundamentalException
