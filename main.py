@@ -87,7 +87,7 @@ class BarMiddleware(middlewares.Middlewares):
 
     def before(self):
         print("BAR MIDDLEWARE BEFORE", self.request.headers)
-        # raise MiddlewaresLevelBeforeException("memeg", 503)
+        raise MiddlewaresLevelBeforeException("memeg", 503)
         # abort(401)
 
     def after(self, response: Response) -> Response:
