@@ -14,7 +14,8 @@ class Middlewares(ABC):
     for response data you can catch it inside after function.
     """
 
-    def __init__(self, req: Request | None):
+    def __init__(self, path: str, req: Request | None):
+        self.path = path
         self.request = req
 
     def set_blueprint(self, blueprint: Blueprint):

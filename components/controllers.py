@@ -26,7 +26,7 @@ class Controllers(ABC):
         self.res: Response | None = None
         self.req: Request = request
         self.path: str = path
-        self.middleware: Middlewares = mw(self.req)
+        self.middleware: Middlewares = mw(self.path, self.req)
         self.__response_json: Any = None
         self.__response_model: BaseModel | None = None
         self.__response_http_code = 0

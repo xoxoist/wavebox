@@ -1,5 +1,5 @@
 from enum import Enum
-from werkzeug.exceptions import HTTPException, NotFound
+from werkzeug.exceptions import HTTPException
 
 
 class Tagging(Enum):

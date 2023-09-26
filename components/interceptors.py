@@ -3,5 +3,5 @@ from flask import Blueprint, Response, Request
 
 
 class Interceptors(ABC):
-    def __init__(self, req: Request | None, res: Response | None):
+    def __init__(self, path):
         pass
