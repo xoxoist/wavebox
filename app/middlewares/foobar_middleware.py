@@ -1,6 +1,6 @@
 from flask import Request, Response
 from components.middlewares import Middlewares
-from troubles.exceptions import MiddlewaresLevelBeforeException
+from components.exceptions import MiddlewaresLevelBeforeException
 
 
 class FooMiddleware(Middlewares):

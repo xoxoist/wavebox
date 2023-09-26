@@ -5,7 +5,7 @@ from app.services.foobar_service import ServiceBar, ServiceFoo
 from components import controllers
 from structure.tools.request_header import HeaderBase
 from app.middlewares.foobar_middleware import FooMiddleware, BarMiddleware
-from troubles.exceptions import FundamentalException
+from components.exceptions import FundamentalException
 
 """
 The purpose of this class is to be used as Controller file for your flask application,
@@ -25,7 +25,7 @@ class ControllerFoo(controllers.Controllers, ServiceFoo):
             return super().done()
         except FundamentalException as e:
             err_response = ResponseBase()
-            err_response.response_code = "99"
+            err_response.response_code = e.error_code
             err_response.response_message = str(e)
             print(e.exception_tag)
             return super().catcher(err_response, e)
@@ -43,7 +43,7 @@ class ControllerBar(controllers.Controllers, ServiceBar):
             return super().done()
         except FundamentalException as e:
             err_response = ResponseBase()
-            err_response.response_code = "99"
+            err_response.response_code = e.error_code
             err_response.response_message = str(e)
             print(e.exception_tag)
             return super().catcher(err_response, e)

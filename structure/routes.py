@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
-from structure.application import ApplicationService
-
-from structure.application import ApplicationService
+from definitions import Applications
 
 
 class Routes(ABC):
@@ -10,4 +8,4 @@ class Routes(ABC):
     def create_routes(self): raise NotImplemented
 
     @abstractmethod
-    def apply(self) -> ApplicationService: raise NotImplemented
+    def apply(self) -> Applications: raise NotImplemented

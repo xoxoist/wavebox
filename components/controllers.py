@@ -5,10 +5,10 @@ from pydantic import BaseModel, ValidationError
 from typing import Type, Any
 
 # structural imports
-from troubles.exceptions import ControllerLevelAfterException
-from troubles.exceptions import ControllerLevelBeforeException
-from troubles.exceptions import ControllersException
-from troubles.exceptions import FundamentalException
+from components.exceptions import ControllerLevelAfterException
+from components.exceptions import ControllerLevelBeforeException
+from components.exceptions import ControllersException
+from components.exceptions import FundamentalException
 from components.middlewares import Middlewares
 
 

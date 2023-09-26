@@ -1,14 +1,12 @@
 from structure import groups
-from flask import request
 from app.controllers.foobar_controller import ControllerBar, ControllerFoo
-from app.middlewares.foobar_middleware import FooMiddleware
 from structure import routes
-from structure.application import ApplicationService
+from definitions.applications import Applications
 
 
 class RoutesBar(routes.Routes):
 
-    def __init__(self, application_service: ApplicationService):
+    def __init__(self, application_service: Applications):
         self.application_service = application_service
 
     def create_routes(self):
@@ -17,13 +15,13 @@ class RoutesBar(routes.Routes):
             ControllerBar(groups.Groups(__name__, "test_blueprint", root),
                           path="/bar", endpoint="bar_endpoint"))
 
-    def apply(self) -> ApplicationService:
+    def apply(self) -> Applications:
         self.create_routes()
         return self.application_service
 
 
 class RoutesFoo(routes.Routes):
-    def __init__(self, application_service: ApplicationService):
+    def __init__(self, application_service: Applications):
         self.application_service = application_service
 
     def create_routes(self):
@@ -32,6 +30,6 @@ class RoutesFoo(routes.Routes):
             ControllerFoo(groups.Groups(__name__, "test_blueprint", root),
                           path="/foo", endpoint="foo_endpoint"))
 
-    def apply(self) -> ApplicationService:
+    def apply(self) -> Applications:
         self.create_routes()
         return self.application_service

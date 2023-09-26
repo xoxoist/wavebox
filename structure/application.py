@@ -4,6 +4,7 @@ from werkzeug.exceptions import HTTPException
 from components.controllers import Controllers
 from structure import routes_manager
 from app.responses import ResponseBase
+from components.exceptions import FundamentalException
 
 
 class ApplicationService:
@@ -49,9 +50,9 @@ class ApplicationService:
                 pass
 
         @app.errorhandler(HTTPException)
-        def handle_http_exception(e):
+        def handle_http_exception(e: FundamentalException):
             response = ResponseBase()
-            response.response_code = "99"
+            response.response_code = e.error_code
             response.response_message = str(e)
             response_data = jsonify(dict(response))
             response_data.status_code = e.code
