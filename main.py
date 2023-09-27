@@ -1,4 +1,4 @@
-from app.middlewares.foobar_middleware import FooMiddleware, MemekMiddleware
+from app.middlewares.foobar_middleware import FooMiddleware, MemekMiddleware, BarMiddleware
 from components.exceptions import FundamentalException
 from flask import Flask, Response, Request, jsonify, Blueprint
 from definitions import Applications
@@ -23,14 +23,21 @@ class MyApplication(Applications):
     #     return response
 
     def routes_setup(self):
-        with Routes("api", self.name, url_prefix="/api") as api:
-            with Routes("foobar", self.name, url_prefix="/foobar", blueprint=api) as foobar:
-                with Routes("v1", self.name, url_prefix="/v1", blueprint=foobar) as v1:
-                    v1.use(True, MemekMiddleware)
-                    ControllerFoo(v1, path="/foo", endpoint="foo v1", methods=["POST"])
-                    ControllerBar(v1, path="/bar", endpoint="bar v1", methods=["POST"])
-                    self.register_blueprint(v1)
+        with Routes("api", self.name, url_prefix="/api/foobar/v1") as api:
+            with Routes("foo", self.name, url_prefix="/foo", blueprint=api) as foo:
+                foo.use(MemekMiddleware)
+                foo.use(FooMiddleware)
+                ControllerFoo(foo, endpoint="foo v1", methods=["POST"])
+                self.register_blueprint(foo)
+            with Routes("bar", self.name, url_prefix="/bar", blueprint=api) as bar:
+                bar.use(MemekMiddleware)
+                bar.use(BarMiddleware)
+                ControllerBar(bar, endpoint="bar v1", methods=["POST"])
+                self.register_blueprint(bar)
+
                 # self.register_blueprint(foobar)
+
+        self.register_blueprint(api)
 
     def provide_config(self):
         pass

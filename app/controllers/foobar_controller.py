@@ -15,8 +15,8 @@ you need to create a class that needed to be derived from controllers.Controller
 
 
 class ControllerFoo(controllers.Controllers, ServiceFoo):
-    def __init__(self, blueprint: Blueprint, path: str, endpoint: str, methods: List[str]):
-        super().__init__(blueprint, path, endpoint, methods)
+    def __init__(self, blueprint: Blueprint, endpoint: str, methods: List[str]):
+        super().__init__(blueprint, endpoint, methods)
 
     def controller(self):
         try:
@@ -32,8 +32,8 @@ class ControllerFoo(controllers.Controllers, ServiceFoo):
 
 
 class ControllerBar(controllers.Controllers, ServiceBar):
-    def __init__(self, blueprint: Blueprint, path: str, endpoint: str, methods: List[str]):
-        super().__init__(blueprint, path, endpoint, methods)
+    def __init__(self, blueprint: Blueprint, endpoint: str, methods: List[str]):
+        super().__init__(blueprint, endpoint, methods)
 
     def controller(self):
         try:
