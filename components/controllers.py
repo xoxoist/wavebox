@@ -1,3 +1,4 @@
+# library imports
 from abc import ABC, abstractmethod
 from flask import Blueprint, Request, Response
 from flask import request, make_response, jsonify
@@ -32,8 +33,11 @@ class Controllers(ABC):
         self.__response_http_code = 0
         self.__response_type: Type[BaseModel]
         if self.middleware is not None:
+            print("PATH", self.path)
             self.middleware.request = self.req
-            self.middleware.set_blueprint(self.blueprint)
+            self.blueprint.before_request(self.middleware.before)
+            self.blueprint.after_request(self.middleware.after)
+            # self.middleware.set_blueprint(self.blueprint)
 
     def __header_validation(self, header_type: Type[BaseModel]):
         """

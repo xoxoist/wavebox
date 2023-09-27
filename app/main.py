@@ -1,7 +1,7 @@
 from components.exceptions import FundamentalException
-from flask import Flask, Response, jsonify, Blueprint
+from flask import Flask, Response, Request, jsonify, Blueprint
 from definitions import Applications
-from app.responses import ResponseBase
+from app.models.responses import ResponseBase
 from werkzeug.exceptions import NotFound
 from app.controllers.foobar_controller import ControllerBar, ControllerFoo
 from components import Routes
@@ -14,9 +14,17 @@ class MyApplication(Applications):
         super().__init__(flask_app, Blueprint('root', self.name, url_prefix="/"))
         self.routes_setup()
 
+    # def before(self):
+    #     print("API MIDDLEWARE BEFORE")
+    #
+    # def after(self, response: Response) -> Response:
+    #     print("API MIDDLEWARE AFTER")
+    #     return response
+
     def routes_setup(self):
         with Routes("api", self.name, url_prefix="/api") as api:
             with Routes("foobar", self.name, url_prefix="/foobar", blueprint=api) as foobar:
+                # foobar.use(self.before, self.after)
                 with Routes("v1", self.name, url_prefix="/v1", blueprint=foobar) as v1:
                     ControllerFoo(v1, path="/foo", endpoint="foo v1", methods=["POST"])
                     ControllerBar(v1, path="/bar", endpoint="bar v1", methods=["POST"])

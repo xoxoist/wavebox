@@ -1,7 +1,7 @@
 from flask import Request, Response
 from components.middlewares import Middlewares
-from components.exceptions import MiddlewaresLevelBeforeException
 from components.interceptors import Interceptors
+from components.exceptions import MiddlewaresLevelBeforeException
 
 
 class MWInterceptor(Interceptors):
@@ -15,7 +15,7 @@ class MWInterceptor(Interceptors):
 
 class FooMiddleware(Middlewares):
     def __init__(self, path: str, req: Request | None):
-        super(FooMiddleware, self).__init__(path, req)
+        super().__init__(path, req)
         self.path = path
         self.request = req
         self.interceptor = MWInterceptor(self.path)
@@ -32,10 +32,10 @@ class FooMiddleware(Middlewares):
 
 class BarMiddleware(Middlewares):
     def __init__(self, path: str, req: Request | None):
-        super(BarMiddleware, self).__init__(path, req)
+        super().__init__(path, req)
+        self.interceptor = MWInterceptor(self.path)
         self.path = path
         self.request = req
-        self.interceptor = MWInterceptor(self.path)
 
     def before(self):
         self.interceptor.show_path()

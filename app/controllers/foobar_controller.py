@@ -1,9 +1,9 @@
 from flask import Blueprint
-from app.requests import RequestCreateBar, RequestCreateFoo
-from app.responses import ResponseBase
+from app.models.requests import RequestCreateBar, RequestCreateFoo
+from app.models.responses import ResponseBase
 from app.services.foobar_service import ServiceBar, ServiceFoo
 from components import controllers
-from app.headers import HeaderBase
+from app.models.headers import HeaderBase
 from app.middlewares.foobar_middleware import FooMiddleware, BarMiddleware
 from components.exceptions import FundamentalException
 from typing import List
@@ -28,7 +28,6 @@ class ControllerFoo(controllers.Controllers, ServiceFoo):
             err_response = ResponseBase()
             err_response.response_code = e.error_code
             err_response.response_message = str(e)
-            print(e.exception_tag)
             return super().catcher(err_response, e)
 
 
@@ -46,5 +45,4 @@ class ControllerBar(controllers.Controllers, ServiceBar):
             err_response = ResponseBase()
             err_response.response_code = e.error_code
             err_response.response_message = str(e)
-            print(e.exception_tag)
             return super().catcher(err_response, e)
