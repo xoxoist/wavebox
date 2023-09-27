@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from flask import Blueprint, Request, Response
 from flask import request, make_response, jsonify
 from pydantic import BaseModel, ValidationError
-from typing import Type, Any
+from typing import Type, Any, List
 
 # structural imports
 from components.exceptions import ControllerLevelAfterException
@@ -20,12 +20,12 @@ class Controllers(ABC):
     validation, middleware, next to service.
     """
 
-    def __init__(self, blueprint: Blueprint, path: str, endpoint: str, mw: Type[Middlewares]):
+    def __init__(self, blueprint: Blueprint, path: str, endpoint: str, methods: List[str], mw: Type[Middlewares]):
         self.blueprint: Blueprint = blueprint
-        self.blueprint.add_url_rule(path, view_func=self.controller, endpoint=endpoint)
+        self.blueprint.add_url_rule(path, view_func=self.controller, endpoint=endpoint, methods=methods)
         self.res: Response | None = None
         self.req: Request = request
-        self.path: str = path
+        self.path: str = self.blueprint.url_prefix + path
         self.middleware: Middlewares = mw(self.path, self.req)
         self.__response_json: Any = None
         self.__response_model: BaseModel | None = None

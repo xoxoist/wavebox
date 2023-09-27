@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
-from flask import Flask, Response
+from flask import Flask, Blueprint, Response
 from werkzeug.exceptions import HTTPException
 from components.exceptions import FundamentalException
-from components import Controllers
-from structure import routes_manager
+from typing import List
+import time
 
 
 class Applications(ABC):
@@ -14,14 +14,15 @@ class Applications(ABC):
     """
 
     # private variables
-    __registered_controllers = []
+    __registered_blueprints: List[Blueprint] = []
     __config = {
         'port': 5000,
         'debug': 0,
     }
 
-    def __init__(self, flask_app: Flask):
+    def __init__(self, flask_app: Flask, blueprint: Blueprint):
         self.flask_app = flask_app
+        self.blueprint = blueprint
 
     @abstractmethod
     def global_handle_http_exception(self, ex: FundamentalException) -> Response:
@@ -37,30 +38,36 @@ class Applications(ABC):
         """
         raise NotImplemented
 
-    def add_controller(self, controller: Controllers):
-        self.__registered_controllers.append(controller)
+    def register_blueprint(self, blueprint: Blueprint):
+        self.__registered_blueprints.append(blueprint)
 
     def log_endpoint(self):
         """
         'log_endpoint' helps you to see registered endpoints to your app
         """
         app = self.flask_app
-        blacklist = ['/static', '/favicon.ico']
+        ignores = ['/static', '/favicon.ico']
         for rule in app.url_map.iter_rules():
-            if 'GET' in rule.methods and not any(rule.rule.startswith(ignore) for ignore in blacklist):
+            if not any(rule.rule.startswith(ignore) for ignore in ignores):
                 print(f"{rule.rule} | {rule.methods}: {rule.endpoint}")
 
     def start(self):
         """
         'start' start your application service with Flask
         """
+        for blueprint in self.__registered_blueprints:
+            self.blueprint.register_blueprint(blueprint)
 
-        route_extension = routes_manager.RoutesManager(routes=self.__registered_controllers)
-        route_extension.register_route(self.flask_app)
+        self.flask_app.register_blueprint(self.blueprint)
+
+        registered_blueprints = self.flask_app.blueprints
+        for name, blueprint in registered_blueprints.items():
+            print(f"{name} : {blueprint.url_prefix}")
 
         @self.flask_app.errorhandler(HTTPException)
         def handle_http_exception(ex: FundamentalException):
             return self.global_handle_http_exception(ex)
 
         self.log_endpoint()
+        time.sleep(0.2)
         self.flask_app.run(port=5000)
