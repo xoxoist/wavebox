@@ -17,16 +17,15 @@ class Routes(Blueprint):
         else:
             self.url_prefix = url_prefix
 
-    def use(self, middlewares: typing.Type[Middlewares]):
+    def use(self, fake_controller: bool, middlewares: typing.Type[Middlewares]):
         if self.incoming_blueprint is None:
             raise Exception("No Blueprint provide")
         else:
-            print("prefix", self.incoming_blueprint.url_prefix)
             mw = middlewares(self.url_prefix, request)
-            mw.set_blueprint(self.incoming_blueprint)
+            # mw.set_blueprint(self.incoming_blueprint)
             # self.incoming_blueprint.url_prefix += "/v1/foo"
-            # self.incoming_blueprint.before_request(mw.before)
-            # self.incoming_blueprint.after_request(mw.after)
+            self.before_request(mw.before)
+            self.after_request(mw.after)
 
     def __enter__(self):
         return self

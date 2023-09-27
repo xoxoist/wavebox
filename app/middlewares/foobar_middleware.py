@@ -13,6 +13,25 @@ class MWInterceptor(Interceptors):
         print(self.path)
 
 
+class MemekMiddleware(Middlewares):
+    def __init__(self, path: str, req: Request | None):
+        super().__init__(path, req)
+        self.path = path
+        self.request = req
+        self.interceptor = MWInterceptor(self.path)
+
+    def before(self):
+        self.interceptor.show_path()
+        print("path", self.request.path)
+
+        print("Memek MIDDLEWARE BEFORE", self.request.headers)
+        # raise MiddlewaresLevelBeforeException("middleware fault foo", 401)
+
+    def after(self, response: Response) -> Response:
+        print("Memek MIDDLEWARE AFTER", response)
+        print("path", self.request.path)
+        return response
+
 class FooMiddleware(Middlewares):
     def __init__(self, path: str, req: Request | None):
         super().__init__(path, req)
@@ -22,11 +41,14 @@ class FooMiddleware(Middlewares):
 
     def before(self):
         self.interceptor.show_path()
+        print("path", self.request.path)
+
         print("FOO MIDDLEWARE BEFORE", self.request.headers)
         # raise MiddlewaresLevelBeforeException("middleware fault foo", 401)
 
     def after(self, response: Response) -> Response:
         print("FOO MIDDLEWARE AFTER", response)
+        print("path", self.request.path)
         return response
 
 
