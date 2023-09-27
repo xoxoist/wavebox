@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from app.responses import ResponseBase
+from app.models.responses import ResponseBase
 from components import Services
 
 

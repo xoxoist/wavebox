@@ -1,3 +1,4 @@
+# library imports
 from abc import ABC, abstractmethod
 from flask import Blueprint, Request, Response
 from flask import request, make_response, jsonify
@@ -20,20 +21,23 @@ class Controllers(ABC):
     validation, middleware, next to service.
     """
 
-    def __init__(self, blueprint: Blueprint, path: str, endpoint: str, methods: List[str], mw: Type[Middlewares]):
+    def __init__(self, blueprint: Blueprint, path: str, endpoint: str, methods: List[str]):
         self.blueprint: Blueprint = blueprint
         self.blueprint.add_url_rule(path, view_func=self.controller, endpoint=endpoint, methods=methods)
         self.res: Response | None = None
         self.req: Request = request
         self.path: str = self.blueprint.url_prefix + path
-        self.middleware: Middlewares = mw(self.path, self.req)
+        # self.middleware: Middlewares = mw(self.path, self.req)
         self.__response_json: Any = None
         self.__response_model: BaseModel | None = None
         self.__response_http_code = 0
         self.__response_type: Type[BaseModel]
-        if self.middleware is not None:
-            self.middleware.request = self.req
-            self.middleware.set_blueprint(self.blueprint)
+        # if self.middleware is not None:
+        #     print("PATH", self.path)
+        #     self.middleware.request = self.req
+        #     self.blueprint.before_request(self.middleware.before)
+        #     self.blueprint.after_request(self.middleware.after)
+            # self.middleware.set_blueprint(self.blueprint)
 
     def __header_validation(self, header_type: Type[BaseModel]):
         """
@@ -83,8 +87,8 @@ class Controllers(ABC):
         attaching response for middleware, TODO need to be able adding default response headers
         """
         self.res = make_response(self.__response_model.model_dump_json(), self.__response_http_code)
-        if self.middleware is not None:
-            self.middleware.response = self.res
+        # if self.middleware is not None:
+        #     self.middleware.response = self.res
         self.res.headers['Content-Type'] = 'application/json'
 
     def before(self, request_type: Type[BaseModel], header_type: Type[BaseModel]):
