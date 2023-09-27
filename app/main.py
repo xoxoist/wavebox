@@ -1,3 +1,4 @@
+from app.middlewares.foobar_middleware import FooMiddleware
 from components.exceptions import FundamentalException
 from flask import Flask, Response, Request, jsonify, Blueprint
 from definitions import Applications
@@ -24,8 +25,8 @@ class MyApplication(Applications):
     def routes_setup(self):
         with Routes("api", self.name, url_prefix="/api") as api:
             with Routes("foobar", self.name, url_prefix="/foobar", blueprint=api) as foobar:
-                # foobar.use(self.before, self.after)
                 with Routes("v1", self.name, url_prefix="/v1", blueprint=foobar) as v1:
+                    v1.use(FooMiddleware)
                     ControllerFoo(v1, path="/foo", endpoint="foo v1", methods=["POST"])
                     ControllerBar(v1, path="/bar", endpoint="bar v1", methods=["POST"])
                     self.register_blueprint(v1)
@@ -34,9 +35,9 @@ class MyApplication(Applications):
         pass
 
     def global_handle_http_exception(self, ex: FundamentalException) -> Response:
-        response_code = "NFD404" if isinstance(ex, NotFound) else ex.error_code
+        # response_code = "NFD404" if isinstance(ex, NotFound) else ex.error_code
         response = ResponseBase()
-        response.response_code = response_code
+        # response.response_code = response_code
         response.response_message = str(ex)
         response_data = jsonify(dict(response))
         response_data.status_code = ex.code
