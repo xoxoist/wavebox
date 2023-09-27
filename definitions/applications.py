@@ -17,7 +17,7 @@ class Applications(ABC):
     __registered_blueprints: List[Blueprint] = []
     __config = {
         'port': 5000,
-        'debug': 0,
+        'debug': 1,
     }
 
     def __init__(self, flask_app: Flask, blueprint: Blueprint):
@@ -70,4 +70,4 @@ class Applications(ABC):
 
         self.log_endpoint()
         time.sleep(0.2)
-        self.flask_app.run(port=5000)
+        self.flask_app.run(port=5000, debug=True)
