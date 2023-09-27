@@ -7,7 +7,7 @@ from components import Middlewares
 class Routes(Blueprint):
     incoming_blueprint: Blueprint | None = None
 
-    def __init__(self, name: str, import_name: str, url_prefix: str, blueprint: Blueprint | None = None):
+    def __init__(self, name: str, import_name: str, url_prefix: str = "", blueprint: Blueprint | None = None):
         super().__init__(name, import_name, url_prefix=url_prefix)
         if blueprint is not None:
             print("memek", blueprint.url_prefix + url_prefix)
@@ -17,11 +17,12 @@ class Routes(Blueprint):
         else:
             self.url_prefix = url_prefix
 
-    def use(self, fake_controller: bool, middlewares: typing.Type[Middlewares]):
+    def use(self, middlewares: typing.Type[Middlewares]):
         if self.incoming_blueprint is None:
             raise Exception("No Blueprint provide")
         else:
-            mw = middlewares(self.url_prefix, request)
+            print("kuda terbang", self.incoming_blueprint.url_prefix)
+            mw = middlewares(self.incoming_blueprint.url_prefix, request)
             # mw.set_blueprint(self.incoming_blueprint)
             # self.incoming_blueprint.url_prefix += "/v1/foo"
             self.before_request(mw.before)
