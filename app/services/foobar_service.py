@@ -1,9 +1,9 @@
 from pydantic import BaseModel
 from app.responses import ResponseBase
-from components import services
+from components import Services
 
 
-class ServiceFoo(services.Services):
+class ServiceFoo(Services):
     def _validate(self):
         pass
         # raise ServicesLevelValidateException("validate", 403)
@@ -23,7 +23,7 @@ class ServiceFoo(services.Services):
         return response_model, response_htt_code
 
 
-class ServiceBar(services.Services):
+class ServiceBar(Services):
     def _validate(self):
         pass
         # raise ServicesLevelValidateException("validate", 403)
