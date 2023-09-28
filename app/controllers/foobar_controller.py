@@ -1,10 +1,9 @@
 from flask import Blueprint
-from app.models.requests import RequestCreateBar, RequestCreateFoo
+from app.models.requests import RequestCreateBar, RequestCreateFoo, QueryParamTest, FormParamTest
 from app.models.responses import ResponseBase
 from app.services.foobar_service import ServiceBar, ServiceFoo
 from components import controllers
 from app.models.headers import HeaderBase
-from app.middlewares.foobar_middleware import FooMiddleware, BarMiddleware
 from components.exceptions import FundamentalException
 from typing import List
 
@@ -20,7 +19,7 @@ class ControllerFoo(controllers.Controllers, ServiceFoo):
 
     def controller(self):
         try:
-            super().before(RequestCreateFoo, HeaderBase)
+            super().before(HeaderBase)
             super().apply(*self.retrieve())
             super().after(ResponseBase)
             return super().done()
@@ -37,7 +36,13 @@ class ControllerBar(controllers.Controllers, ServiceBar):
 
     def controller(self):
         try:
-            super().before(RequestCreateBar, HeaderBase)
+            # body = super().bind_body(RequestCreateBar)
+            query = super().bind_query(QueryParamTest)
+            form = super().bind_form(FormParamTest)
+            # print("INCOMING BODY", body)
+            print("INCOMING QUERY", query)
+            print("INCOMING FORM", form)
+            super().before(HeaderBase)
             super().apply(*self.retrieve())
             super().after(ResponseBase)
             return super().done()

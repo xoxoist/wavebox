@@ -1,4 +1,4 @@
-from app.middlewares.foobar_middleware import FooMiddleware, MemekMiddleware, BarMiddleware
+from app.middlewares.foobar_middleware import AuthMiddleware, FooMiddleware, BarMiddleware
 from components.exceptions import FundamentalException
 from flask import Flask, Response, Request, jsonify, Blueprint
 from definitions import Applications
@@ -15,37 +15,27 @@ class MyApplication(Applications):
         super().__init__(flask_app, Blueprint('root', self.name, url_prefix="/"))
         self.routes_setup()
 
-    # def before(self):
-    #     print("API MIDDLEWARE BEFORE")
-    #
-    # def after(self, response: Response) -> Response:
-    #     print("API MIDDLEWARE AFTER")
-    #     return response
-
     def routes_setup(self):
-        with Routes("api", self.name, url_prefix="/api/foobar/v1") as api:
-            with Routes("foo", self.name, url_prefix="/foo", blueprint=api) as foo:
-                foo.use(MemekMiddleware)
+        with Routes("api", self.name, path="/api/foobar/v1") as api:
+            with Routes("foo", self.name, path="/foo", blueprint=api) as foo:
+                foo.use(AuthMiddleware)
                 foo.use(FooMiddleware)
                 ControllerFoo(foo, endpoint="foo v1", methods=["POST"])
                 self.register_blueprint(foo)
-            with Routes("bar", self.name, url_prefix="/bar", blueprint=api) as bar:
-                bar.use(MemekMiddleware)
+            with Routes("bar", self.name, path="/bar", blueprint=api) as bar:
+                bar.use(AuthMiddleware)
                 bar.use(BarMiddleware)
                 ControllerBar(bar, endpoint="bar v1", methods=["POST"])
                 self.register_blueprint(bar)
-
-                # self.register_blueprint(foobar)
-
         self.register_blueprint(api)
 
     def provide_config(self):
         pass
 
     def global_handle_http_exception(self, ex: FundamentalException) -> Response:
-        # response_code = "NFD404" if isinstance(ex, NotFound) else ex.error_code
+        response_code = "NFD404" if isinstance(ex, NotFound) else ex.error_code
         response = ResponseBase()
-        # response.response_code = response_code
+        response.response_code = response_code
         response.response_message = str(ex)
         response_data = jsonify(dict(response))
         response_data.status_code = ex.code
@@ -55,7 +45,7 @@ class MyApplication(Applications):
 if __name__ == '__main__':
     MyApplication(Flask(__name__)).start()
 
-# import inspect
+#
 # def this_is_decorator(params):
 #     def decorator(func):
 #         def wrapper(*args, **kwargs):
@@ -72,6 +62,9 @@ if __name__ == '__main__':
 #     return decorator
 #
 #
+# import inspect
+
+
 # def kwargs_decorator(func):
 #     def wrapper(*args, **kwargs):
 #         signature = inspect.signature(func)
@@ -87,6 +80,19 @@ if __name__ == '__main__':
 #         return result
 #
 #     return wrapper
+
+# def memek(*args, **kwargs):
+#     def babi(func):
+#         print("Decorator is executed with args:", args)
+#         print("Decorator is executed with kwargs:", kwargs)
+#         return func
+#
+#     return babi
+#
+# @memek(1, 2, 3, 4, kuah_bakso="enak")
+# def testss():
+#     print("KONTOLS")
+
 #
 #
 # @this_is_decorator("x")
@@ -97,6 +103,9 @@ if __name__ == '__main__':
 # @kwargs_decorator
 # def any_kwargs_attach_to_this_func(t: str, m: str):
 #     print(t, m)
+#
+#
+# any_kwargs_attach_to_this_func(t="hello", m="world")
 
 # Press the green button in the gutter to run the script.
 # if __name__ == '__main__':

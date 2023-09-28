@@ -57,11 +57,9 @@ class Applications(ABC):
         """
         for blueprint in self.__registered_blueprints:
             self.blueprint.register_blueprint(blueprint)
-
         self.flask_app.register_blueprint(self.blueprint)
 
-        registered_blueprints = self.flask_app.blueprints
-        for name, blueprint in registered_blueprints.items():
+        for name, blueprint in self.flask_app.blueprints.items():
             print(f"{name} : {blueprint.url_prefix}")
 
         @self.flask_app.errorhandler(HTTPException)
@@ -70,4 +68,4 @@ class Applications(ABC):
 
         self.log_endpoint()
         time.sleep(0.2)
-        self.flask_app.run(port=5000, debug=True)
+        self.flask_app.run(port=5000)
