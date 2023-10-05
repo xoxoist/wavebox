@@ -19,6 +19,9 @@ class DataType(Enum):
     FORM = 3
     PATH = 4
 
+class EmptyBaseModel(BaseModel):
+    pass
+
 
 class Controllers(ABC):
     """

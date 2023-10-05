@@ -7,10 +7,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wavebox"
-version = "1.0.0"
+version = "1.0.1"
 authors = [
-  { name="Oktaviano Fahdi Syaputra", email="adorufus@gmail.com" },
-  { name="Muhammad Isa Wijayakusuma", email="hyperspace018@gmail.com" }
+  { name="Nightsilver Tech", email="hyperspace018@gmail.com" }
 ]
 description = "A compact, fast, and easy to use flask backend wrapper"
 
@@ -49,3 +48,6 @@ zipp = "3.17.0"
 "Homepage" = "https://github.com/xoxoist/dicksy"
 "Repository" = "https://github.com/xoxoist/dicksy"
 "Bug Tracker" = "https://github.com/xoxoist/dicksy/issues"
+
+[tool.setuptools]
+packages = ["wavebox"]
