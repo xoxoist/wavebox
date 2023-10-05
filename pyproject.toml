@@ -7,12 +7,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wavebox"
-version = "0.0.1"
+version = "1.0.0"
 authors = [
   { name="Oktaviano Fahdi Syaputra", email="adorufus@gmail.com" },
-  { name="Muhammad Isa Wijayakusuma", email="" }
+  { name="Muhammad Isa Wijayakusuma", email="hyperspace018@gmail.com" }
 ]
-license = "GPL-3.0-or-later"
 description = "A compact, fast, and easy to use flask backend wrapper"
 
 readme = "README.md"
@@ -27,26 +26,26 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
 ]
 
-dependencies = [
-    "annotated-types==0.5.0",
-    "blinker==1.6.2",
-    "click==8.1.7",
-    "Flask==2.3.3",
-    "Flask-Script==2.0.5",
-    "importlib-metadata==6.8.0",
-    "injector==0.21.0",
-    "itsdangerous==2.1.2",
-    "Jinja2==3.1.2",
-    "MarkupSafe==2.1.3",
-    "pydantic==2.3.0",
-    "pydantic_core==2.6.3",
-    "python-dotenv==1.0.0",
-    "typing_extensions==4.8.0",
-    "Werkzeug==2.3.7",
-    "zipp==3.17.0",
-]
+[dependencies]
+annotated-types = "0.5.0"
+blinker = "1.6.2"
+click = "8.1.7"
+Flask = "2.3.3"
+Flask-Script = "2.0.5"
+importlib-metadata = "6.8.0"
+injector = "0.21.0"
+itsdangerous = "2.1.2"
+Jinja2 = "3.1.2"
+MarkupSafe = "2.1.3"
+pydantic = "2.3.0"
+pydantic_core = "2.6.3"
+PyJWT = "2.8.0"
+python-dotenv = "1.0.0"
+typing-extensions = "4.8.0"
+Werkzeug = "2.3.7"
+zipp = "3.17.0"
 
 [project.urls]
-"Homepage" = "https://github.com/adorufus/wavebox"
-"Repository" = "https://github.com/adorufus/wavebox"
-"Bug Tracker" = "https://github.com/adorufus/wavebox/issues"
+"Homepage" = "https://github.com/xoxoist/dicksy"
+"Repository" = "https://github.com/xoxoist/dicksy"
+"Bug Tracker" = "https://github.com/xoxoist/dicksy/issues"
