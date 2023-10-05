@@ -1,11 +1,11 @@
-from app.middlewares.foobar_middleware import FooMiddleware, MemekMiddleware, BarMiddleware
-from components.exceptions import FundamentalException
+from .app.middlewares.foobar_middleware import FooMiddleware, MemekMiddleware, BarMiddleware
+from .components.exceptions import FundamentalException
 from flask import Flask, Response, Request, jsonify, Blueprint
-from definitions import Applications
-from app.models.responses import ResponseBase
+from .definitions import Applications
+from .app.models.responses import ResponseBase
 from werkzeug.exceptions import NotFound
-from app.controllers.foobar_controller import ControllerBar, ControllerFoo
-from components import Routes
+from .app.controllers.foobar_controller import ControllerBar, ControllerFoo
+from .components import Routes
 
 
 class MyApplication(Applications):

@@ -1,9 +1,12 @@
 from abc import ABC, abstractmethod
 from flask import Flask, Blueprint, Response
 from werkzeug.exceptions import HTTPException
-from components.exceptions import FundamentalException
+from ..components.exceptions import FundamentalException
 from typing import List
+import injector
+from injector import Binder
 import time
+from injector import Injector
 
 
 class Applications(ABC):
@@ -12,6 +15,8 @@ class Applications(ABC):
     in this class where the merging, initialization, and configs
     are provided and will be distributed between other abstraction.
     """
+
+    dep: Injector
 
     # private variables
     __registered_blueprints: List[Blueprint] = []
@@ -49,7 +54,12 @@ class Applications(ABC):
         ignores = ['/static', '/favicon.ico']
         for rule in app.url_map.iter_rules():
             if not any(rule.rule.startswith(ignore) for ignore in ignores):
-                print(f"{rule.rule} | {rule.methods}: {rule.endpoint}")
+                print(f"[{','.join(list(rule.methods))}] [{rule.rule}] [{rule.endpoint}]")
+
+    def log_blueprints(self):
+        for name, blueprint in self.flask_app.blueprints.items():
+            print(f"[{name}] [{blueprint.url_prefix}] {blueprint.name}")
+            pass
 
     def start(self):
         """
@@ -57,17 +67,13 @@ class Applications(ABC):
         """
         for blueprint in self.__registered_blueprints:
             self.blueprint.register_blueprint(blueprint)
-
         self.flask_app.register_blueprint(self.blueprint)
-
-        registered_blueprints = self.flask_app.blueprints
-        for name, blueprint in registered_blueprints.items():
-            print(f"{name} : {blueprint.url_prefix}")
 
         @self.flask_app.errorhandler(HTTPException)
         def handle_http_exception(ex: FundamentalException):
             return self.global_handle_http_exception(ex)
 
+        self.log_blueprints()
         self.log_endpoint()
         time.sleep(0.2)
-        self.flask_app.run(port=5000, debug=True)
+        self.flask_app.run(port=5000)

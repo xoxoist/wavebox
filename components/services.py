@@ -1,6 +1,8 @@
 # library imports
 from abc import ABC, abstractmethod
 from pydantic import BaseModel
+from typing import Any
+from ..definitions import Applications
 
 
 class Services(ABC):
@@ -13,7 +15,7 @@ class Services(ABC):
     """
 
     @abstractmethod
-    def _validate(self):
+    def _validate(self, **kwargs):
         """
         '_validate' this abstract method represents pre-defined method for validating incoming
         data from request you are freely defines this method behavior for support your business
@@ -23,7 +25,7 @@ class Services(ABC):
         raise NotImplemented
 
     @abstractmethod
-    def _logics(self) -> (BaseModel, int):
+    def _logics(self, req: BaseModel) -> (BaseModel, int):
         """
         '_logics' this abstract method represents your business logic activity, your business
         logic process should be defined inside this method, you can do database queries, api
@@ -34,7 +36,7 @@ class Services(ABC):
         raise NotImplemented
 
     @abstractmethod
-    def retrieve(self) -> (BaseModel, int):
+    def retrieve(self, req: BaseModel) -> (BaseModel, int):
         """
         'retrieve' this abstract method represent an entry to your business logic activity, you
         can post-defined after your business logic activity already executed and in this method

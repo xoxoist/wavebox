@@ -4,13 +4,20 @@ from flask import Blueprint, Request, Response
 from flask import request, make_response, jsonify
 from pydantic import BaseModel, ValidationError
 from typing import Type, Any, List
+from enum import Enum
 
 # structural imports
-from components.exceptions import ControllerLevelAfterException
-from components.exceptions import ControllerLevelBeforeException
-from components.exceptions import ControllersException
-from components.exceptions import FundamentalException
-from components.middlewares import Middlewares
+from ..components.exceptions import ControllerLevelAfterException
+from ..components.exceptions import ControllerLevelBeforeException
+from ..components.exceptions import ControllersException
+from ..components.exceptions import FundamentalException
+
+
+class DataType(Enum):
+    BODY = 1
+    QUERY = 2
+    FORM = 3
+    PATH = 4
 
 
 class Controllers(ABC):
@@ -27,7 +34,6 @@ class Controllers(ABC):
         self.res: Response | None = None
         self.req: Request = request
         self.path: str = self.blueprint.url_prefix
-        # self.middleware: Middlewares = mw(self.path, self.req)
         self.__response_json: Any = None
         self.__response_model: BaseModel | None = None
         self.__response_http_code = 0
@@ -37,7 +43,7 @@ class Controllers(ABC):
         #     self.middleware.request = self.req
         #     self.blueprint.before_request(self.middleware.before)
         #     self.blueprint.after_request(self.middleware.after)
-            # self.middleware.set_blueprint(self.blueprint)
+        # self.middleware.set_blueprint(self.blueprint)
 
     def __header_validation(self, header_type: Type[BaseModel]):
         """
@@ -53,13 +59,20 @@ class Controllers(ABC):
                 error_messages.append(f"Header {error['loc'][0]}: {error['msg']}")
             raise ControllerLevelBeforeException(str(",".join(error_messages)))
 
-    def __bind_request_to_dataclass(self, request_type: Type[BaseModel]) -> BaseModel:
+    def __bind_request_to_dataclass(self, request_type: Type[BaseModel], data_type: DataType) -> BaseModel:
         """
         '__bind_request_to_dataclass' validating incoming request and validate
         the content with pydantic BaseModel class.
         """
         try:
-            return request_type(**self.req.get_json())
+            if data_type is DataType.BODY:
+                return request_type(**self.req.get_json())
+            if data_type is DataType.QUERY:
+                return request_type(**self.req.args)
+            if data_type is DataType.FORM:
+                return request_type(**self.req.form.to_dict())
+            if data_type is DataType.PATH:
+                return request_type(**self.req.view_args)
         except ValidationError as e:
             error_messages = []
             for error in e.errors():
@@ -91,14 +104,39 @@ class Controllers(ABC):
         #     self.middleware.response = self.res
         self.res.headers['Content-Type'] = 'application/json'
 
-    def before(self, request_type: Type[BaseModel], header_type: Type[BaseModel]):
+    def bind_body(self, request_type: Type[BaseModel]) -> BaseModel:
+        try:
+            return self.__bind_request_to_dataclass(request_type, DataType.BODY)
+        except ControllersException as e:
+            raise ControllerLevelBeforeException(str(e))
+
+    def bind_query(self, request_type: Type[BaseModel]) -> BaseModel:
+        try:
+            return self.__bind_request_to_dataclass(request_type, DataType.QUERY)
+        except ControllersException as e:
+            raise ControllerLevelBeforeException(str(e))
+
+    def bind_form(self, request_type: Type[BaseModel]) -> BaseModel:
+        try:
+            return self.__bind_request_to_dataclass(request_type, DataType.FORM)
+        except ControllersException as e:
+            raise ControllerLevelBeforeException(str(e))
+
+    def bind_path(self, request_type: Type[BaseModel]) -> BaseModel:
+        try:
+            return self.__bind_request_to_dataclass(request_type, DataType.PATH)
+        except ControllersException as e:
+            raise ControllerLevelBeforeException(str(e))
+
+    # def before(self, request_type: Type[BaseModel], header_type: Type[BaseModel]):
+    def before(self, header_type: Type[BaseModel]):
         """
         'before' executing binding body and header from incoming request then catch
         the error of validation and will be raised ControllerLevelBeforeException,
         to tells the controller that its happen in before function execution.
         """
         try:
-            self.__bind_request_to_dataclass(request_type)
+            # self.__bind_request_to_dataclass(request_type)
             self.__header_validation(header_type)
         except ControllersException as e:
             raise ControllerLevelBeforeException(str(e))
